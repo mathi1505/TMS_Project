@@ -1,0 +1,451 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Student Master</h2>
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  @if (hasDraft && mode === 'new') {
+    <div class="banner banner-info" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <span>📋 A saved draft has been restored. Continue where you left off, or discard it to start fresh.</span>
+      <button class="btn btn-ghost" style="white-space:nowrap;flex-shrink:0;" (click)="clearDraft()">Discard Draft</button>
+    </div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <div class="section-header">
+        <span class="section-title">Student Identification</span>
+        <span class="section-badge section-badge-open">Step 1</span>
+      </div>
+
+      <!-- Student Type -->
+      <div class="field" [class.field-error-state]="showError('studentType')">
+        <label for="f-type">Student Type <span class="req">*</span></label>
+        <select id="f-type" formControlName="studentType" class="status-select"
+          (blur)="onFieldBlur('studentType')">
+          @for (opt of studentTypeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (err('studentType', 'required')) {
+          <small class="field-error">⚠ Type is required.</small>
+        }
+      </div>
+
+      <!-- Student ID (auto-generated) -->
+      <div class="field">
+        <label>Student ID</label>
+        @if (mode === 'new') {
+          <input type="text" [value]="previewId" disabled class="mono" />
+          <small class="field-hint">Auto-generated · changes with type selection above</small>
+        } @else {
+          <input type="text" [value]="current?.studentId ?? ''" disabled class="mono" />
+        }
+      </div>
+
+      <!-- Student No. (part of the composite key alongside Student ID) -->
+      <div class="field">
+        <label>Student No.</label>
+        @if (mode === 'new') {
+          <input type="text" [value]="previewNumber ?? 'Auto-generated'" disabled class="mono" />
+          <small class="field-hint">Auto-generated · next available number for this type</small>
+        } @else {
+          <input type="text" [value]="current?.studentNumber ?? ''" disabled class="mono" />
+        }
+      </div>
+
+      <!-- Student Name -->
+      <div class="field field-wide" [class.field-error-state]="showError('studentName')">
+        <label for="f-name">Student Name <span class="req">*</span></label>
+        <input id="f-name" type="text" formControlName="studentName"
+          maxlength="50" placeholder="Full name"
+          (blur)="onFieldBlur('studentName')" />
+        @if (err('studentName', 'required')) {
+          <small class="field-error">⚠ Student Name is required.</small>
+        } @else if (err('studentName', 'maxlength')) {
+          <small class="field-error">⚠ Maximum 50 characters.</small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Academic &amp; Batch Info</span>
+        <span class="section-badge section-badge-open">Step 2</span>
+      </div>
+
+      <!-- Study Mode -->
+      <div class="field" [class.field-error-state]="showError('studyMode')">
+        <label for="f-mode">Study Mode <span class="req">*</span></label>
+        <select id="f-mode" formControlName="studyMode" class="status-select"
+          (blur)="onFieldBlur('studyMode')">
+          @for (opt of studyModeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (err('studyMode', 'required')) {
+          <small class="field-error">⚠ Study Mode is required.</small>
+        }
+      </div>
+
+      <!-- Assigned Staff -->
+      <div class="field" [class.field-error-state]="showError('assignedStaff')">
+        <label for="f-staff">Staff - Employee ID <span class="req">*</span></label>
+        <select id="f-staff" formControlName="assignedStaff" class="status-select"
+          (blur)="onFieldBlur('assignedStaff')">
+          <option value="" disabled selected>Select Employee ID</option>
+          @if (legacyAssignedStaffOption; as legacy) {
+            <option [value]="staffKey(legacy)">{{ formatStaffLabel(legacy) }}</option>
+          }
+          @for (category of staffCategories; track category) {
+            @for (opt of staffOptionsFor(category); track staffKey(opt)) {
+              <option [value]="staffKey(opt)">{{ formatStaffLabel(opt) }}</option>
+            }
+          }
+        </select>
+        @if (err('assignedStaff', 'required')) {
+          <small class="field-error">⚠ Staff - Employee ID is required.</small>
+        }
+      </div>
+
+      <!-- Batch Number -->
+      <div class="field" [class.field-error-state]="showError('batch')">
+        <label for="f-batch">Batch Number <span class="req">*</span></label>
+        <input id="f-batch" type="number" min="1" step="1"
+          formControlName="batch" placeholder="e.g. 1"
+          (keydown)="onDigitsOnly($event)"
+          (blur)="onFieldBlur('batch')" />
+        @if (err('batch', 'required')) {
+          <small class="field-error">⚠ Batch Number is required.</small>
+        } @else if (err('batch', 'min')) {
+          <small class="field-error">⚠ Batch must be at least 1.</small>
+        }
+      </div>
+
+      <!-- Native / From Place -->
+      <div class="field" [class.field-error-state]="showError('nativePlace')">
+        <label for="f-native">Native / From Place <span class="req">*</span></label>
+        <input id="f-native" type="text" formControlName="nativePlace"
+          maxlength="25" placeholder="e.g. Indore"
+          (blur)="onFieldBlur('nativePlace')" />
+        @if (err('nativePlace', 'required')) {
+          <small class="field-error">⚠ Native / From Place is required.</small>
+        }
+      </div>
+
+      <!-- Joining Date -->
+      <div class="field" [class.field-error-state]="showError('joiningDate')">
+        <label for="f-join">Joining Date <span class="req">*</span></label>
+        <input id="f-join" type="date" formControlName="joiningDate"
+          [max]="todayIso" [attr.max]="todayIso"
+          (blur)="onFieldBlur('joiningDate')" />
+        @if (err('joiningDate', 'required')) {
+          <small class="field-error">⚠ Joining Date is required.</small>
+        } @else if (err('joiningDate', 'futureDate')) {
+          <small class="field-error">⚠ Joining Date cannot be in the future (max: {{ todayIso }}).</small>
+        }
+      </div>
+
+      <div class="section-header" [class.section-locked]="!section1Valid && mode === 'new'">
+        <span class="section-title">Contact Details</span>
+        @if (!section1Valid && mode === 'new') {
+          <span class="section-badge section-badge-locked">🔒 Fill Steps 1 &amp; 2 first</span>
+        } @else {
+          <span class="section-badge section-badge-open">Step 3</span>
+        }
+      </div>
+
+      <div class="section-lock-overlay-wrapper" [class.locked-section]="!section1Valid && mode === 'new'">
+
+        <!-- Mobile No -->
+        <div class="field" [class.field-error-state]="showError('mobileNo') || hasDuplicateError('mobileNo')">
+          <label for="f-mobile">Mobile No <span class="req">*</span></label>
+          <input id="f-mobile" type="text" formControlName="mobileNo"
+            maxlength="10" placeholder="10-digit number" class="mono"
+            (keydown)="onDigitsOnly($event)"
+            (blur)="onFieldBlur('mobileNo')" />
+          @if (err('mobileNo', 'required')) {
+            <small class="field-error">⚠ Mobile No is required.</small>
+          } @else if (err('mobileNo', 'digitsOnly')) {
+            <small class="field-error">⚠ Digits only (0–9).</small>
+          } @else if (err('mobileNo', 'exactLength')) {
+            <small class="field-error">⚠ Must be exactly 10 digits.</small>
+          } @else if (hasDuplicateError('mobileNo')) {
+            <small class="field-error">⚠ {{ duplicateErrors['mobileNo'] }}</small>
+          }
+        </div>
+
+        <!-- Emergency Contact No -->
+        <div class="field" [class.field-error-state]="showError('emergencyContactNo')">
+          <label for="f-emerg">Emergency Contact No <span class="req">*</span></label>
+          <input id="f-emerg" type="text" formControlName="emergencyContactNo"
+            maxlength="10" placeholder="10-digit number" class="mono"
+            (keydown)="onDigitsOnly($event)"
+            (blur)="onFieldBlur('emergencyContactNo')" />
+          @if (err('emergencyContactNo', 'required')) {
+            <small class="field-error">⚠ Emergency Contact No is required.</small>
+          } @else if (err('emergencyContactNo', 'digitsOnly')) {
+            <small class="field-error">⚠ Digits only (0–9).</small>
+          } @else if (err('emergencyContactNo', 'exactLength')) {
+            <small class="field-error">⚠ Must be exactly 10 digits.</small>
+          } @else if (err('emergencyContactNo', 'sameAsMobile')) {
+            <small class="field-error">⚠ Emergency Contact No must differ from Mobile No.</small>
+          }
+        </div>
+
+        <!-- Relationship (OPTIONAL) -->
+        <div class="field">
+          <label for="f-rel">Relationship <span class="optional-tag">(Optional)</span></label>
+          <input id="f-rel" type="text" formControlName="relationship"
+            maxlength="30" placeholder="e.g. Father, Mother"
+            (keydown)="onAlphaOnly($event)" />
+        </div>
+
+        <!-- Email ID -->
+        <div class="field" [class.field-error-state]="showError('emailId') || hasDuplicateError('emailId')">
+          <label for="f-email">Email ID <span class="req">*</span></label>
+          <input id="f-email" type="text" formControlName="emailId"
+            maxlength="30" placeholder="example@domain.com"
+            (blur)="onFieldBlur('emailId')" />
+          @if (err('emailId', 'required')) {
+            <small class="field-error">⚠ Email ID is required.</small>
+          } @else if (err('emailId', 'emailAt')) {
+            <small class="field-error">⚠ Email must contain the &#64; symbol.</small>
+          } @else if (err('emailId', 'emailDotCom')) {
+            <small class="field-error">⚠ Email must contain ".com".</small>
+          } @else if (err('emailId', 'maxlength')) {
+            <small class="field-error">⚠ Maximum 30 characters.</small>
+          } @else if (hasDuplicateError('emailId')) {
+            <small class="field-error">⚠ {{ duplicateErrors['emailId'] }}</small>
+          }
+        </div>
+
+        @if (!section1Valid && mode === 'new') {
+          <div class="lock-message">
+            Complete <strong>Student Identification</strong> and <strong>Academic &amp; Batch Info</strong> above to unlock this section.
+          </div>
+        }
+      </div>
+
+      <div class="section-header" [class.section-locked]="!section1Valid && mode === 'new'">
+        <span class="section-title">Educational Background</span>
+        @if (!section1Valid && mode === 'new') {
+          <span class="section-badge section-badge-locked">🔒 Fill Steps 1 &amp; 2 first</span>
+        } @else {
+          <span class="section-badge section-badge-open">Step 4</span>
+        }
+      </div>
+
+      <div class="section-lock-overlay-wrapper" [class.locked-section]="!section1Valid && mode === 'new'">
+
+        <!-- Qualification -->
+        <div class="field" [class.field-error-state]="showError('qualification')">
+          <label for="f-qual">Qualification <span class="req">*</span></label>
+          <input id="f-qual" type="text" formControlName="qualification"
+            maxlength="20" placeholder="e.g. B.Tech, MCA"
+            (blur)="onFieldBlur('qualification')" />
+          @if (err('qualification', 'required')) {
+            <small class="field-error">⚠ Qualification is required.</small>
+          }
+        </div>
+
+        <!-- College Name -->
+        <div class="field field-wide" [class.field-error-state]="showError('collegeName')">
+          <label for="f-college">College Name <span class="req">*</span></label>
+          <input id="f-college" type="text" formControlName="collegeName"
+             placeholder="e.g. IIT Indore"
+            (blur)="onFieldBlur('collegeName')" />
+          @if (err('collegeName', 'required')) {
+            <small class="field-error">⚠ College Name is required.</small>
+          }
+        </div>
+
+        <!-- Passout Year -->
+        <div class="field" [class.field-error-state]="showError('passoutYear')">
+          <label for="f-passout">Passout Year <span class="req">*</span></label>
+          <input id="f-passout" type="number" min="1990" [max]="currentYear"
+            formControlName="passoutYear" placeholder="e.g. 2024"
+            (keydown)="onDigitsOnly($event)"
+            (blur)="onFieldBlur('passoutYear')" />
+          @if (err('passoutYear', 'required')) {
+            <small class="field-error">⚠ Passout Year is required.</small>
+          } @else if (err('passoutYear', 'invalidYear')) {
+            <small class="field-error">⚠ Enter a valid year between 1990 and {{ currentYear }}.</small>
+          }
+        </div>
+
+        <!-- Experience -->
+        <div class="field" [class.field-error-state]="showError('experience')">
+          <label for="f-exp">Experience <span class="req">*</span></label>
+          <input id="f-exp" type="text" formControlName="experience"
+            maxlength="30" placeholder="e.g. 1 Year / Fresher"
+            (blur)="onFieldBlur('experience')" />
+          @if (err('experience', 'required')) {
+            <small class="field-error">⚠ Experience is required.</small>
+          }
+        </div>
+
+        <!-- Reference By (OPTIONAL) -->
+        <div class="field">
+          <label for="f-ref">Reference By <span class="optional-tag">(Optional)</span></label>
+          <input id="f-ref" type="text" formControlName="referenceBy"
+            maxlength="30" placeholder="e.g. College / Friend" />
+        </div>
+
+        @if (!section1Valid && mode === 'new') {
+          <div class="lock-message">
+            Complete <strong>Student Identification</strong> and <strong>Academic &amp; Batch Info</strong> above to unlock this section.
+          </div>
+        }
+      </div>
+
+      <div class="section-header" [class.section-locked]="!section1Valid && mode === 'new'">
+        <span class="section-title">Fee &amp; Duration</span>
+        @if (!section1Valid && mode === 'new') {
+          <span class="section-badge section-badge-locked">🔒 Fill Steps 1 &amp; 2 first</span>
+        } @else {
+          <span class="section-badge section-badge-open">Step 5</span>
+        }
+      </div>
+
+      <div class="section-lock-overlay-wrapper" [class.locked-section]="!section1Valid && mode === 'new'">
+
+        <!-- Paid / Non-Paid -->
+        <div class="field" [class.field-error-state]="showError('paidStatus')">
+          <label for="f-paid">Paid / Non-Paid <span class="req">*</span></label>
+          <select id="f-paid" formControlName="paidStatus" class="status-select"
+            (blur)="onFieldBlur('paidStatus')">
+            @for (opt of paidOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (err('paidStatus', 'required')) {
+            <small class="field-error">⚠ Paid / Non-Paid is required.</small>
+          }
+        </div>
+
+        <!-- Total Agreed Fee -->
+        <div class="field" [class.field-error-state]="showError('totalAgreedFee')">
+          <label for="f-fee">
+            Total Agreed Fee (₹)
+            @if (isPaid) { <span class="req">*</span> }
+            @else { <span class="optional-tag">(Non-Paid — auto ₹0)</span> }
+          </label>
+          <input id="f-fee" type="number" min="0" step="1"
+            formControlName="totalAgreedFee" placeholder="e.g. 50000"
+            (keydown)="onDigitsOnly($event)"
+            (blur)="onFieldBlur('totalAgreedFee')" />
+          @if (!isPaid) {
+            <small class="field-hint">Auto-set to ₹0 for Non-Paid students</small>
+          } @else if (err('totalAgreedFee', 'required')) {
+            <small class="field-error">⚠ Total Agreed Fee is required.</small>
+          } @else if (err('totalAgreedFee', 'min')) {
+            <small class="field-error">⚠ Fee cannot be negative.</small>
+          }
+        </div>
+
+        <!-- Duration Frequency -->
+        <div class="field" [class.field-error-state]="showError('durationFrequency')">
+          <label for="f-freq">Duration Frequency <span class="req">*</span></label>
+          <select id="f-freq" formControlName="durationFrequency" class="status-select"
+            (blur)="onFieldBlur('durationFrequency')">
+            @for (opt of freqOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (err('durationFrequency', 'required')) {
+            <small class="field-error">⚠ Duration Frequency is required.</small>
+          }
+        </div>
+
+        <!-- Total Duration -->
+        <div class="field" [class.field-error-state]="showError('totalDuration')">
+          <label for="f-duration">Total Duration <span class="req">*</span></label>
+          <input id="f-duration" type="number" min="1" step="1"
+            formControlName="totalDuration" placeholder="e.g. 6"
+            (keydown)="onDigitsOnly($event)"
+            (blur)="onFieldBlur('totalDuration')" />
+          @if (err('totalDuration', 'required')) {
+            <small class="field-error">⚠ Total Duration is required.</small>
+          } @else if (err('totalDuration', 'min')) {
+            <small class="field-error">⚠ Total Duration must be at least 1.</small>
+          }
+        </div>
+
+        @if (!section1Valid && mode === 'new') {
+          <div class="lock-message">
+            Complete <strong>Student Identification</strong> and <strong>Academic &amp; Batch Info</strong> above to unlock this section.
+          </div>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Status</span>
+      </div>
+
+      <!-- Student Status -->
+      <div class="field" [class.field-error-state]="showError('stdStatus')">
+        <label for="f-std-status">Student Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-std-status" formControlName="stdStatus" class="status-select"
+            (blur)="onFieldBlur('stdStatus')">
+            @for (opt of stdStatusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (err('stdStatus', 'required')) {
+            <small class="field-error">⚠ Student Status is required.</small>
+          }
+        } @else {
+          <input id="f-std-status" type="text"
+            [value]="form.get('stdStatus')?.value ?? 'In Progress'"
+            disabled readonly />
+        }
+      </div>
+
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-del" formControlName="delFlag" class="status-select">
+            @for (opt of delFlagOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input id="f-del" type="text"
+            [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'De-Active'"
+            disabled readonly />
+        }
+      </div>
+
+    </form>
+
+    <div class="form-footer">
+      <button type="button" class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode === 'view' && current) {
+        <button type="button" class="btn btn-outline" (click)="onViewDailyActivity()">📅 View Daily Activity</button>
+      }
+      @if (mode !== 'view') {
+        <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+    </div>
+
+  </div>
+</section>

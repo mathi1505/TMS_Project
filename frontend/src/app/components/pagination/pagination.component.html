@@ -1,0 +1,34 @@
+<div class="pagination-bar">
+  <div class="pagination-controls">
+    <button
+      class="btn-page btn-page-nav"
+      type="button"
+      title="Previous page"
+      (click)="goPrev()"
+      [disabled]="isFirstPage"
+    >&lsaquo; Prev</button>
+
+    <div class="page-jump">
+      <span>Page</span>
+      <input
+        class="page-jump-input"
+        type="text"
+        inputmode="numeric"
+        [ngModel]="pageInput"
+        (ngModelChange)="onInputChange($event)"
+        (keyup.enter)="onJump()"
+        (blur)="onInputBlur()"
+        [attr.aria-label]="'Go to page, ' + totalPages + ' total'"
+      />
+    </div>
+
+    <button
+      class="btn-page btn-page-nav"
+      type="button"
+      title="Next page"
+      (click)="goNext()"
+      [disabled]="isLastPage"
+    >Next &rsaquo;</button>
+  </div>
+</div>
+

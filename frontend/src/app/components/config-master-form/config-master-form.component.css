@@ -1,0 +1,15 @@
+
+.req {
+  color: var(--danger);
+  margin-left: 2px;
+  font-weight: 700;
+}
+
+@media (min-width: 960px) {
+  .record-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .field-wide {
+    grid-column: span 2;
+  }
+}

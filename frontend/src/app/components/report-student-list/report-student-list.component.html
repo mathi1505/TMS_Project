@@ -1,0 +1,160 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Student Information Report</h2>
+    </div>
+    <div class="download-bar top-download-bar">
+      <label for="r-download">Download</label>
+      <select id="r-download" [(ngModel)]="downloadFormat" class="status-select">
+        <option value="">Select format…</option>
+        @for (opt of downloadOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <button class="btn btn-primary" (click)="onDownload()">⬇ Download</button>
+    </div>
+  </div>
+
+  <div class="card search-card">
+    <div class="search-row">
+
+      <!-- Student Name (like '%name%' filter, starts filtering as you type) -->
+      <div class="field field-wide name-field">
+        <label for="r-name">Student Name</label>
+        <input
+          id="r-name" type="text"
+          [(ngModel)]="searchName"
+          (ngModelChange)="onNameChange()"
+          (focus)="onNameFocus()"
+          (blur)="onNameBlur()"
+          placeholder="Type to search…"
+          class="search-input" autocomplete="off"
+        />
+        @if (showNameSuggestions && searchName.trim() && nameSuggestions.length > 0) {
+          <ul class="name-suggestions">
+            @for (s of nameSuggestions; track s.studentId + '::' + s.studentNumber) {
+              <li (mousedown)="selectSuggestion(s)">
+                <span class="suggestion-name">{{ s.studentName }}</span>
+                <span class="suggestion-meta mono">{{ s.studentId }}-{{ s.studentNumber }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- Student Type (from Config Table: Internship / Training) -->
+      <div class="field key-field">
+        <label for="r-type">Student Type</label>
+        <select
+          id="r-type"
+          [(ngModel)]="searchType"
+          class="status-select search-input"
+          (ngModelChange)="onFilterChange()"
+        >
+          <option value="">All</option>
+          @for (opt of studentTypeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Student Number -->
+      <div class="field key-field">
+        <label for="r-num">Student Number</label>
+        <input
+          id="r-num" type="number" min="1"
+          [(ngModel)]="searchNumber"
+          (ngModelChange)="onFilterChange()"
+          placeholder="e.g. 1"
+          class="mono search-input" autocomplete="off"
+        />
+      </div>
+
+      <button class="btn btn-ghost" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-card-head">
+      <span class="table-label">Student Information</span>
+      <span class="record-count">{{ records.length }} record(s)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col class="col-id" />
+          <col class="col-name" />
+          <col class="col-type" />
+          <col class="col-joining" />
+          <col class="col-trainer" />
+          <col class="col-mobile" />
+          <col class="col-email" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-id">Student ID</th>
+            <th class="col-name">Name</th>
+            <th class="col-type">Type</th>
+            <th class="col-joining">Joining Date</th>
+            <th class="col-trainer">Trainer</th>
+            <th class="col-mobile">Mobile</th>
+            <th class="col-email">Email</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber) {
+            <tr>
+              <td class="col-id"><span class="id-chip mono">{{ row.studentId }}-{{ row.studentNumber }}</span></td>
+              <td class="col-name">{{ row.studentName }}</td>
+              <td class="col-type">{{ typeLabel(row) }}</td>
+              <td class="col-joining mono">{{ row.joiningDate }}</td>
+              <td class="col-trainer">{{ row.trainerName }}</td>
+              <td class="col-mobile mono">{{ row.mobileNo }}</td>
+              <td class="col-email">{{ row.emailId }}</td>
+              <td class="col-status">
+                <span class="status-badge" [ngClass]="statusBadgeClass(row.status)">
+                  <span class="status-dot"></span>{{ row.status }}
+                </span>
+              </td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button class="btn-icon view-btn" (click)="onFullView(row)">👁 Full View</button>
+                  <button class="btn-icon modify-btn" (click)="onDailyActivity(row)">📅 Daily Activity</button>
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="9" class="empty-cell">
+                @if (loading) { Loading… }
+                @else { No records found for the given search criteria. }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (records.length > 0) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ records.length }}
+        </span>
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          (pageChange)="goToPage($event)"
+        ></app-pagination>
+      </div>
+    }
+
+  </div>
+
+</section>

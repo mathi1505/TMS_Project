@@ -1,0 +1,195 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Configuration Master</h2>
+      @if (mode !== 'new' && combinedId) {
+        <span class="key-badge mono" title="Configuration Key">{{ combinedId }}</span>
+      }
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <!-- Configuration Master (free text) -->
+      <div class="field key-field">
+        <label for="f-cm">Configuration Master <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <input
+            id="f-cm" type="text"
+            formControlName="configMaster"
+            maxlength="4"
+            class="mono"
+            placeholder="e.g. STUD"
+            style="text-transform: uppercase;"
+          />
+        } @else {
+          <input
+            id="f-cm" type="text"
+            [value]="form.get('configMaster')?.value"
+            disabled readonly class="mono"
+          />
+        }
+        @if (form.get('configMaster')?.errors?.['required'] && form.get('configMaster')?.touched) {
+          <small class="field-error">Configuration Master is required.</small>
+        }
+        @if (selectedDescription) {
+          <small class="field-hint">{{ selectedDescription }}</small>
+        }
+      </div>
+ 
+
+      <!-- Configuration ID (auto-generated) -->
+      <div class="field key-field">
+        <label for="f-id">
+          Configuration ID
+          <span class="key-badge" title="Auto-generated">AUTO</span>
+        </label>
+        @if (mode === 'new') {
+          <input
+            id="f-id" type="text"
+            [value]="previewCombinedId || 'Select Configuration Master first'"
+            disabled readonly class="mono"
+          />
+          <small class="field-hint">Running serial, auto-assigned on Save.</small>
+        } @else {
+          <input
+            id="f-id" type="text"
+            [value]="combinedId"
+            disabled readonly class="mono"
+          />
+        }
+      </div>
+     <!-- Category-->
+<div class="field field-wide">
+  <label for="f-cmn">
+    Category
+    <span class="req">*</span>
+  </label>
+
+  <input
+    id="f-cmn"
+    type="text"
+    formControlName="configMasterName"
+    maxlength="50"
+    placeholder="e.g. Expense"
+  />
+
+  @if (
+    form.get('configMasterName')?.errors?.['required'] &&
+    form.get('configMasterName')?.touched
+  ) {
+    <small class="field-error">
+      Configuration Master Name is required.
+    </small>
+  }
+</div>
+     <!-- Configuration Name -->
+<div class="field field-wide">
+
+  <label for="f-name">
+    Configuration Name <span class="req">*</span>
+  </label>
+
+  <input
+    id="f-name"
+    type="text"
+    formControlName="configName"
+    maxlength="25"
+    placeholder="e.g. AS - Assessor Name"
+    style="text-transform: uppercase;"
+  />
+
+  @if (
+    form.get('configName')?.hasError('pattern') &&
+    (
+      form.get('configName')?.touched ||
+      form.get('configName')?.dirty
+    )
+  ) {
+    <small class="field-error">
+      Format must be: 2 characters - Name
+      <br>
+      Example: AS - Assessor Name
+    </small>
+  }
+
+  @if (
+    form.get('configName')?.hasError('required') &&
+    (
+      form.get('configName')?.touched ||
+      form.get('configName')?.dirty
+    )
+  ) {
+    <small class="field-error">
+      Configuration Name is required.
+    </small>
+  }
+
+  @if (
+    form.get('configName')?.hasError('maxlength') &&
+    (
+      form.get('configName')?.touched ||
+      form.get('configName')?.dirty
+    )
+  ) {
+    <small class="field-error">
+      Maximum 25 characters.
+    </small>
+  }
+
+</div>
+
+      <!-- Del Flag / Status -->
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-del" formControlName="delFlag" class="status-select">
+            @for (opt of delFlagOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (form.get('delFlag')?.errors?.['required'] && form.get('delFlag')?.touched) {
+            <small class="field-error">Status is required.</small>
+          }
+        } @else {
+          <input
+            id="f-del" type="text"
+            [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'D – De-Active'"
+            disabled readonly
+          />
+          @if (mode === 'new') {
+            <small class="field-hint"></small>
+          }
+        }
+      </div>
+
+    </form>
+
+    <!-- ── Action footer ── -->
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+    </div>
+  </div>
+
+</section>

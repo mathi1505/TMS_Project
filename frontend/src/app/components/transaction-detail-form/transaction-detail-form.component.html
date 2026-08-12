@@ -1,0 +1,216 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Daily Transaction Entry</h2>
+      @if (mode !== 'new' && current) {
+      <span class="key-badge mono" title="Entry ID">
+        {{ svc.combinedDetId(current) }}
+      </span>
+      }
+    </div>
+    <span class="mode-pill" [class.mode-new]="mode === 'new'" [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'">{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+  <div class="banner" [class.banner-error]="banner.kind==='error'" [class.banner-info]="banner.kind==='info'"
+    [class.banner-success]="banner.kind==='success'">{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <div class="section-header">
+        <span class="section-title">Transaction Reference</span>
+        <span class="section-badge section-badge-open">Section 1</span>
+      </div>
+
+      <!-- Transaction Type (EXP / INC) -->
+      <div class="field" [class.field-error-state]="showError('trxnId')">
+        <label for="f-type">Transaction Type <span class="req">*</span></label>
+        @if (mode === 'new') {
+        <select id="f-type" formControlName="trxnId" class="mono status-select" (blur)="onFieldBlur('trxnId')"
+          (change)="onFieldBlur('trxnId')">
+          <option value="">— Select Transaction Type —</option>
+          @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        } @else {
+        <input type="text" [value]="current?.trxnId === 'EX' ? 'EXP – Expenses' : 'INC – Income'" disabled readonly
+          class="mono" />
+        }
+        @if (err('trxnId', 'required')) {
+        <small class="field-error">⚠ Transaction Type is required.</small>
+        }
+      </div>
+
+      <div class="field" [class.field-error-state]="showError('masterNumber')">
+        <label for="f-master">Transaction Master ID <span class="req">*</span></label>
+        @if (mode === 'new') {
+        <select id="f-master" formControlName="masterNumber" class="mono status-select"
+          (blur)="onFieldBlur('masterNumber')" (change)="onFieldBlur('masterNumber'); onMasterChange()">
+          <option value="">
+            {{ form.get('trxnId')?.value ? '— Select Transaction Master ID —' : 'Select a Transaction Type first' }}
+          </option>
+          @for (entry of masterEntries; track entry.trxnNumber) {
+         <option [value]="entry.trxnNumber">
+  {{ svc.combinedMasterId(entry.trxnId, entry.trxnNumber) }} - {{ entry.trxnName }}
+</option>
+          }
+        </select>
+        @if (form.get('trxnId')?.value && masterEntries.length === 0) {
+        <small class="field-hint">No active Transaction Master IDs found for this type.</small>
+        }
+        } @else {
+        <input type="text" [value]="svc.combinedMasterId(current?.trxnId ?? '', current?.masterNumber ?? 0)" disabled
+          readonly class="mono" />
+        }
+        @if (err('masterNumber', 'required')) {
+        <small class="field-error">⚠ Transaction Master ID is required.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label>Transaction Name <span class="display-tag">(Display Only)</span></label>
+        <input type="text"
+          [value]="mode === 'new' ? (resolvedTrxnName || 'Resolved from Master ID selection') : resolvedTrxnName"
+          disabled readonly />
+      </div>
+
+      <!-- DR/CR Flag (display only) -->
+      <div class="field">
+        <label>DR/CR Flag <span class="display-tag">(Display Only)</span></label>
+        @if (mode === 'new') {
+        <input type="text"
+          [value]="drCrPreview ? (drCrPreview + ' – ' + (drCrPreview === 'D' ? 'Debit' : 'Credit')) : ''" disabled
+          readonly class="mono" />
+        } @else {
+        <input type="text"
+          [value]="(current?.drCrFlag ?? '') + ' – ' + (current?.drCrFlag === 'D' ? 'Debit' : 'Credit')" disabled
+          readonly class="mono" />
+        }
+      </div>
+
+      <div class="field">
+        <label>Transaction Date <span class="display-tag">(System Date — Locked)</span></label>
+        <input type="text" [value]="mode === 'new' ? todayIso : (current?.tranDate ?? '')" disabled readonly
+          class="mono" />
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Dates &amp; Amount</span>
+        <span class="section-badge section-badge-open">Section 2</span>
+      </div>
+
+      <!-- Value Date -->
+      <div class="field" [class.field-error-state]="showError('valueDate')">
+        <label for="f-vdate">Value Date <span class="req">*</span></label>
+        <input id="f-vdate" type="date" formControlName="valueDate" [max]="todayIso"
+          (blur)="onFieldBlur('valueDate')" />
+        @if (err('valueDate', 'required')) {
+        <small class="field-error">⚠ Value Date is required.</small>
+        } @else if (err('valueDate', 'futureDate')) {
+        <small class="field-error">⚠ Date cannot be in the future (max: {{ todayIso }}).</small>
+        }
+      </div>
+
+      <!-- Amount -->
+      <div class="field" [class.field-error-state]="showError('amount')">
+        <label for="f-amount">Amount <span class="req">*</span></label>
+        <input id="f-amount" type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00"
+          class="mono" (blur)="onFieldBlur('amount')" />
+        @if (err('amount', 'required')) {
+        <small class="field-error">⚠ Amount is required.</small>
+        } @else if (err('amount', 'min')) {
+        <small class="field-error">⚠ Amount must be greater than 0.</small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Reference &amp; Description</span>
+        <span class="section-badge section-badge-open">Section 3</span>
+      </div>
+
+      <!-- Reference No -->
+      <div class="field" style="position: relative;">
+        <label for="f-ref">Reference No. <span class="optional-tag">(Optional)</span></label>
+        <input id="f-ref" type="text" formControlName="referenceNo" autocomplete="off" maxlength="15"
+          placeholder="e.g. INV-1001" (input)="onReferenceNoInput()" (focus)="onReferenceNoInput()"
+          (blur)="onReferenceNoBlur()" />
+        @if (showReferenceNoSuggestions) {
+        <ul class="suggestion-list">
+          @if (referenceNoSuggestions.length) {
+          @for (s of referenceNoSuggestions; track studentKeyFor(s)) {
+          <li class="suggestion-item" (mousedown)="$event.preventDefault(); selectReferenceNoSuggestion(s)">
+            <span class="mono">{{ referenceNoOptionLabel(s) }}</span> — {{ s.studentName }}
+          </li>
+          }
+          } @else {
+          <li class="suggestion-item suggestion-empty">No matching students found.</li>
+          }
+        </ul>
+        }
+        @if (form.get('referenceNo')?.errors?.['maxlength'] && form.get('referenceNo')?.touched) {
+        <small class="field-error">⚠ Maximum 15 characters.</small>
+        }
+      </div>
+    @if (showStudentName) {
+<div class="field">
+  <label>
+    Student Name
+    <span class="display-tag">(Display Only)</span>
+  </label>
+
+  <input
+    type="text"
+    [value]="form.get('studentName')?.value || ''"
+    disabled
+    readonly
+    class="mono" />
+</div>
+}
+      <!-- Description -->
+      <div class="field field-wide">
+        <label for="f-desc">Description <span class="optional-tag">(Optional)</span></label>
+        <input id="f-desc" type="text" formControlName="description" maxlength="50"
+          placeholder="e.g. Office stationery purchase" />
+        @if (form.get('description')?.errors?.['maxlength'] && form.get('description')?.touched) {
+        <small class="field-error">⚠ Maximum 50 characters.</small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Status</span>
+      </div>
+
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+        <select id="f-del" formControlName="delFlag" class="status-select">
+          @for (opt of delFlagOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        } @else {
+        <input id="f-del" type="text" [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'De-Active'" disabled
+          readonly />
+        }
+      </div>
+
+    </form>
+
+    <!-- ── Action footer ── -->
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+      <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Save' }}
+      </button>
+      }
+    </div>
+  </div>
+
+</section>

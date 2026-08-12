@@ -1,0 +1,346 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Student Daily Activity</h2>
+      @if (mode !== 'new' && current) {
+        <span class="key-badge mono" title="Record Key">
+          {{ current.studentId }} / No. {{ current.studentNumber }} · {{ current.tranDate }} · {{ current.tranId }}-{{ svc.padNum(current.tranNumber) }}
+        </span>
+      }
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <div class="section-header">
+        <span class="section-title">Student Identification</span>
+        <span class="section-badge section-badge-open">Section 1</span>
+      </div>
+
+      <!-- Internship / Training -->
+      <div class="field" [class.field-error-state]="showError('studentType')">
+        <label for="f-stype">Student Type <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <select id="f-stype" formControlName="studentType" class="status-select"
+            (blur)="onFieldBlur('studentType')" (change)="onFieldBlur('studentType')">
+            <option value="">— Select Type —</option>
+            @for (opt of studentTypeOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text" [value]="studentTypeDisplay" disabled readonly class="mono" />
+        }
+        @if (err('studentType', 'required')) {
+          <small class="field-error">⚠ Type is required.</small>
+        }
+      </div>
+
+      <!-- Student Name (dropdown, filtered by Internship/Training selection) -->
+      <div class="field" [class.field-error-state]="showError('studentId')">
+        <label for="f-sname">Student Name <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <select id="f-sname" formControlName="studentId" class="mono status-select"
+            (blur)="onFieldBlur('studentId')" (change)="onFieldBlur('studentId')">
+            <option value="">
+              {{ form.get('studentType')?.value ? '— Select Student —' : 'Select Internship/Training first' }}
+            </option>
+            @for (s of filteredStudentsByType; track studentKeyFor(s)) {
+              <option [value]="studentKeyFor(s)">{{ s.studentName }}</option>
+            }
+          </select>
+          @if (form.get('studentType')?.value && filteredStudentsByType.length === 0) {
+            <small class="field-hint">No active students found for this type.</small>
+          }
+        } @else {
+          <input type="text"
+            [value]="current?.studentName ?? ''"
+            disabled readonly />
+        }
+        @if (err('studentId', 'required')) {
+          <small class="field-error">⚠ Student Name is required.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="f-date">
+          Transaction Date
+          <span class="display-tag">(System Date)</span>
+        </label>
+        <div class="system-date-wrap">
+          <input
+            id="f-date"
+            type="text"
+            [value]="mode === 'new' ? todayIso : (current?.tranDate ?? '')"
+            disabled
+            readonly
+            class="mono system-date-input"
+          />
+          <span class="system-date-badge" title="Auto-filled with current system date">
+            📅 Auto
+          </span>
+        </div>
+        <small class="field-hint">Auto-filled with current system date. No manual entry allowed.</small>
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Transaction Details</span>
+        <span class="section-badge section-badge-open">Section 2</span>
+      </div>
+
+      <!-- Back Value Date — defaults to today, must not be > today -->
+      <div class="field" [class.field-error-state]="showError('backValueDate')">
+        <label for="f-bvdate">
+          Back Value Date <span class="req">*</span>
+        </label>
+        @if (mode !== 'view') {
+          <input
+            id="f-bvdate"
+            type="date"
+            formControlName="backValueDate"
+            [max]="todayIso"
+            (blur)="onFieldBlur('backValueDate')"
+          />
+        } @else {
+          <input
+            type="text"
+            [value]="current?.backValueDate ?? current?.tranDate ?? ''"
+            disabled
+            readonly
+            class="mono"
+          />
+        }
+        @if (err('backValueDate', 'required')) {
+          <small class="field-error">⚠ Back Value Date is required.</small>
+        } @else if (err('backValueDate', 'futureDate')) {
+          <small class="field-error">⚠ Back Value Date cannot be in the future (max: {{ todayIso }}).</small>
+        } @else if (mode !== 'view') {
+          <small class="field-hint">Defaults to today. Cannot be a future date.</small>
+        }
+      </div>
+
+      <!-- Attend In Time -->
+      <div class="field" [class.field-error-state]="showError('attendInTime')">
+        <label for="f-in">Attend In Time <span class="req">*</span></label>
+        <input id="f-in" type="time" formControlName="attendInTime"
+          (blur)="onFieldBlur('attendInTime')" />
+        @if (err('attendInTime', 'required')) {
+          <small class="field-error">⚠ Attend In Time is required.</small>
+        }
+      </div>
+
+      <!-- Attend Out Time -->
+      <div class="field" [class.field-error-state]="showError('attendOutTime') || timeError">
+        <label for="f-out">Attend Out Time <span class="req">*</span></label>
+        <input id="f-out" type="time" formControlName="attendOutTime"
+          (blur)="onFieldBlur('attendOutTime')" />
+        @if (err('attendOutTime', 'required')) {
+          <small class="field-error">⚠ Attend Out Time is required.</small>
+        } @else if (timeError) {
+          <small class="field-error">⚠ Out time must be after In time.</small>
+        }
+      </div>
+
+      <!-- Tran Category (dropdown) -->
+      <div class="field" [class.field-error-state]="showError('tranId')">
+        <label for="f-tid">Tran Category <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <select id="f-tid" formControlName="tranId" class="mono status-select"
+            (blur)="onFieldBlur('tranId')" (change)="onFieldBlur('tranId')">
+            <option value="">— Select Tran ID —</option>
+            @for (opt of tranIdOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text"
+            [value]="(current?.tranId ?? '') + '-' + svc.padNum(current?.tranNumber ?? 0)"
+            disabled readonly class="mono" />
+        }
+        @if (err('tranId', 'required')) {
+          <small class="field-error">⚠ Tran ID is required.</small>
+        }
+        @if (mode === 'new' && selectedTranDisplay) {
+  <small class="field-hint">
+   Next serial: 
+    <strong>{{ selectedTranDisplay }}</strong>  (auto on save)
+  </small>
+}
+</div>
+
+      <!-- Tran Name (dropdown — populated with all Trxn Master entries for the chosen Tran ID;
+           free-entry text field when Tran ID is OT - Others) -->
+      <div class="field" [class.field-error-state]="showError('tranNumber') || (form.get('tranId')?.value === 'OT' && showError('tranNameOther'))">
+        <label for="f-tname">Tran Name <span class="req">*</span></label>
+        @if (mode === 'new') {
+          @if (form.get('tranId')?.value === 'OT') {
+            <input id="f-tname-other" type="text" formControlName="tranNameOther"
+              maxlength="50" placeholder="Enter transaction name"
+              (blur)="onFieldBlur('tranNameOther')" />
+            @if (blurredFields.has('tranNameOther') && !form.get('tranNameOther')?.value?.trim()) {
+              <small class="field-error">⚠ Tran Name is required.</small>
+            } @else if (err('tranNameOther', 'maxlength')) {
+              <small class="field-error">⚠ Maximum 50 characters.</small>
+            }
+          } @else {
+            <select id="f-tname" formControlName="tranNumber" class="status-select"
+              (blur)="onFieldBlur('tranNumber')" (change)="onFieldBlur('tranNumber')">
+              <option value="">
+                {{ form.get('tranId')?.value ? '— Select Tran Name —' : 'Select a Tran ID first' }}
+              </option>
+              @for (entry of tranEntries; track entry.trxnNumber) {
+                <option [value]="entry.trxnNumber">{{ entry.trxnName }}</option>
+              }
+            </select>
+            @if (form.get('tranId')?.value && tranEntries.length === 0) {
+              <small class="field-hint">No active {{ form.get('tranId')?.value }} entries found in Trxn Master.</small>
+            }
+            @if (err('tranNumber', 'required')) {
+              <small class="field-error">⚠ Tran Name is required.</small>
+            }
+          }
+        } @else {
+          <input type="text" [value]="tranNameDisplay" disabled readonly />
+        }
+      </div>
+
+      <!-- Tran Progress Status -->
+      <div class="field" [class.field-error-state]="showError('tranParticular')">
+        <label for="f-particular">Tran Progress Status <span class="req">*</span></label>
+        <select id="f-particular" formControlName="tranParticular" class="status-select"
+          (blur)="onFieldBlur('tranParticular')" (change)="onFieldBlur('tranParticular')">
+          <option value="">— Select Particular —</option>
+          @for (opt of particularOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+        @if (err('tranParticular', 'required')) {
+          <small class="field-error">⚠ Tran Particular is required.</small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Course Detail</span>
+        <span class="section-badge section-badge-open">Section 3</span>
+      </div>
+
+      <!-- Course ID (dropdown) -->
+      <div class="field" [class.field-error-state]="showError('courseId')">
+        <label for="f-cid">Course ID <span class="req">*</span></label>
+        @if (mode !== 'view') {
+          <select id="f-cid" formControlName="courseId" class="mono status-select"
+            (blur)="onFieldBlur('courseId')"
+            (change)="onCourseIdChange(); onFieldBlur('courseId')">
+            <option value="">— Select Course —</option>
+            @for (cid of uniqueCourseIds; track cid) {
+              <option [value]="cid">{{ cid }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text" [value]="current?.courseId ?? ''" disabled readonly class="mono" />
+        }
+        @if (err('courseId', 'required')) {
+          <small class="field-error">⚠ Course ID is required.</small>
+        }
+      </div>
+
+      <!-- Course Detail ID + Technology (dropdown) -->
+      <div class="field" [class.field-error-state]="showError('courseDetId')">
+        <label for="f-cdet">Technology <span class="req">*</span></label>
+        @if (mode !== 'view') {
+          <select id="f-cdet" formControlName="courseDetId" class="status-select"
+            (blur)="onFieldBlur('courseDetId')"
+            (change)="onFieldBlur('courseDetId')">
+            <option value="">— Select Technology —</option>
+            @for (cd of courseDetailsForCourse; track cd.courseDetId) {
+              <option [value]="cd.courseDetId">{{ cd.courseId }}-{{ cd.courseDetId }} · {{ cd.technology }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text"
+            [value]="(current?.courseId ?? '') + '-' + (current?.courseDetId ?? '') + ' · ' + (current?.technology ?? '')"
+            disabled readonly />
+        }
+        @if (err('courseDetId', 'required')) {
+          <small class="field-error">⚠ Technology / Course Detail is required.</small>
+        }
+        @if (mode !== 'view' && resolvedTechnology) {
+          <small class="field-hint">Technology: <strong>{{ resolvedTechnology }}</strong></small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Narration &amp; Remarks</span>
+        <span class="section-badge section-badge-open">Section 4</span>
+      </div>
+
+      <!-- Narration -->
+      <div class="field field-wide">
+        <label for="f-narr">Narration <span class="optional-tag">(Optional)</span></label>
+        <input id="f-narr" type="text" formControlName="narration"
+          maxlength="50" placeholder="e.g. Angular component basics covered" />
+        @if (form.get('narration')?.errors?.['maxlength'] && form.get('narration')?.touched) {
+          <small class="field-error">⚠ Maximum 50 characters.</small>
+        }
+      </div>
+
+      <!-- Remarks -->
+      <div class="field field-wide">
+        <label for="f-rem">Remarks <span class="optional-tag">(Optional)</span></label>
+        <input id="f-rem" type="text" formControlName="remarks"
+          maxlength="50" placeholder="e.g. Good progress" />
+        @if (form.get('remarks')?.errors?.['maxlength'] && form.get('remarks')?.touched) {
+          <small class="field-error">⚠ Maximum 50 characters.</small>
+        }
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Status</span>
+      </div>
+
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-del" formControlName="delFlag" class="status-select">
+            @for (opt of delFlagOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input id="f-del" type="text"
+            [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'De-Active'"
+            disabled readonly />
+        }
+      </div>
+
+    
+
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+      </div>
+      </form>
+    </div>
+  
+
+</section>

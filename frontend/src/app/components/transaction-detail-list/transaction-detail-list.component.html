@@ -1,0 +1,141 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Daily Transaction Entry</h2>
+    </div>
+    @if (auth.isAdmin()) {
+      <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    }
+  </div>
+
+  <!-- Search card -->
+  <div class="card search-card">
+    <div class="search-row">
+
+      <!-- Transaction Type -->
+      <div class="field key-field">
+        <label for="s-type">Transaction Type</label>
+        <select id="s-type" [(ngModel)]="searchTrxnId" class="mono search-select"
+          (change)="doSearch()" (keyup.enter)="doSearch()">
+          <option value="">All</option>
+          @for (opt of typeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Transaction ID -->
+      <div class="field">
+        <label for="s-tid">Transaction ID</label>
+        <input
+          id="s-tid" type="text"
+          [(ngModel)]="searchTransactionId"
+          placeholder="e.g. EX-1"
+          class="search-input mono" autocomplete="off"
+          (input)="doSearch()" (keyup.enter)="doSearch()"
+        />
+      </div>
+
+      <button class="btn btn-ghost" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-card-head">
+      <span class="table-label">
+        @if (showingAll) { All Records }
+        @else {
+          Results for &nbsp;<span class="mono search-term">"{{ searchTypeLabel }}"</span>
+          @if (searchTransactionId) { &nbsp;/ Transaction ID &nbsp;<span class="mono search-term">{{ searchTransactionId.toUpperCase() }}</span> }
+        }
+      </span>
+      <span class="record-count">{{ tableRecords.length }} record(s)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col class="col-detid" />
+          <col class="col-type" />
+          <col class="col-tname" />
+          <col class="col-trandate" />
+          <col class="col-valuedate" />
+          <col class="col-drcr" />
+          <col class="col-ref" />
+          <col class="col-amount" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-detid">Entry ID</th>
+            <th class="col-type">Transaction Type</th>
+            <th class="col-tname">Transaction Name</th>
+            <th class="col-trandate">Tran Date</th>
+            <th class="col-valuedate">Value Date</th>
+            <th class="col-drcr">DR/CR</th>
+            <th class="col-ref">Reference No.</th>
+            <th class="col-amount">Amount</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pagedRecords; track row.trxnId + '-' + row.masterNumber) {
+            <tr>
+              <td class="col-detid"><span class="id-chip mono">{{ combinedDetId(row) }}</span></td>
+              <td class="col-type">
+                <span class="type-chip" [attr.data-type]="row.trxnId">{{ typeLabel(row) }}</span>
+              </td>
+              <td class="col-tname">{{ trxnName(row) }}</td>
+              <td class="col-trandate mono">{{ row.tranDate }}</td>
+              <td class="col-valuedate mono">{{ row.valueDate }}</td>
+              <td class="col-drcr">
+                <span class="drcr-badge" [attr.data-flag]="row.drCrFlag">{{ row.drCrFlag }}</span>
+              </td>
+              <td class="col-ref">{{ row.referenceNo || '—' }}</td>
+              <td class="col-amount">{{ row.amount | number:'1.2-2' }}</td>
+              <td class="col-status">
+                <span class="status-badge"
+                  [class.status-active]="row.delFlag === 'A'"
+                  [class.status-inactive]="row.delFlag === 'D'"
+                ><span class="status-dot"></span>{{ statusLabel(row) }}</span>
+              </td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button class="btn-icon view-btn"   (click)="onView(row)">👁 View</button>
+                  @if (auth.isAdmin()) {
+                  <button class="btn-icon modify-btn" (click)="onModify(row)">✏ Modify</button>
+                }
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="10" class="empty-cell">
+                @if (showingAll) { No records found. }
+                @else { No records found for the given search criteria. }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (tableRecords.length > 0) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ tableRecords.length }}
+        </span>
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          (pageChange)="goToPage($event)"
+        ></app-pagination>
+      </div>
+    }
+  </div>
+
+</section>

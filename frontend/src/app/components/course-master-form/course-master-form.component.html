@@ -1,0 +1,154 @@
+<section class="screen form-screen">
+
+  <!-- Page header — title + mode pill only (no buttons here anymore) -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Course Master</h2>
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <!-- Course ID -->
+      <div class="field key-field">
+        <label for="f-id">Course ID</label>
+        <input
+          id="f-id" type="text" formControlName="id"
+          maxlength="2" placeholder="e.g. FE" class="mono"
+          style="text-transform:uppercase;"
+          (input)="onCourseIdInput($event)"
+          (keydown)="onCourseIdKeydown($event)"
+          (blur)="onCourseIdBlur()"
+        />
+        @if (checkingId) {
+          <small class="field-hint">Checking availability…</small>
+        }
+        @if (form.get('id')?.hasError('duplicate') && form.get('id')?.touched) {
+          <small class="field-error">Course ID "{{ form.get('id')?.value }}" already exists. Primary key must be unique.</small>
+        } @else if (form.get('id')?.errors?.['required'] && form.get('id')?.touched) {
+          <small class="field-error">Course ID is required.</small>
+        } @else if (form.get('id')?.errors?.['alphaOnly'] && form.get('id')?.touched) {
+          <small class="field-error">Letters only, no numbers (auto-uppercased).</small>
+        } @else if (form.get('id')?.invalid && form.get('id')?.touched) {
+          <small class="field-error">Course ID is required (max 2 uppercase letters, no numbers).</small>
+        }
+      </div>
+
+      <!-- Technology -->
+      <div class="field">
+        <label for="f-tech">Technology</label>
+        <input
+          id="f-tech" type="text" formControlName="technology"
+          maxlength="25" placeholder="e.g. Frontend"
+          (keydown)="onAlphaKeydown($event)"
+        />
+        @if (form.get('technology')?.errors?.['required'] && form.get('technology')?.touched) {
+          <small class="field-error">Technology is required.</small>
+        }
+        @if (form.get('technology')?.errors?.['alphaSpace'] && form.get('technology')?.touched) {
+          <small class="field-error">Only letters and spaces allowed.</small>
+        }
+      </div>
+
+      <!-- Topics Covered -->
+      <div class="field field-wide">
+        <label for="f-topic">Topics Covered</label>
+        <input
+          id="f-topic" type="text" formControlName="topic"
+          maxlength="50" placeholder="e.g. Angular Fundamentals"
+          (keydown)="onAlphaKeydown($event)"
+        />
+        @if (form.get('topic')?.errors?.['required'] && form.get('topic')?.touched) {
+          <small class="field-error">Topics Covered is required.</small>
+        }
+        @if (form.get('topic')?.errors?.['alphaSpace'] && form.get('topic')?.touched) {
+          <small class="field-error">Only letters and spaces allowed.</small>
+        }
+      </div>
+
+      <!-- Duration -->
+      <div class="field">
+        <label for="f-dur">Duration (Weeks)</label>
+        <input
+          id="f-dur" type="number" min="0" step="0.5"
+          formControlName="durationWeeks" placeholder="e.g. 10"
+          (keydown)="onDigitKeydown($event)"
+          (input)="onWeeksInput()"
+        />
+        @if (form.get('durationWeeks')?.errors?.['required'] && form.get('durationWeeks')?.touched) {
+          <small class="field-error">Duration is required.</small>
+        }
+        @if (form.get('durationWeeks')?.errors?.['digitsOnly'] && form.get('durationWeeks')?.touched) {
+          <small class="field-error">Numbers only.</small>
+        }
+      </div>
+
+      <!-- Hours -->
+      <div class="field">
+        <label for="f-hours">Hours</label>
+        <input
+          id="f-hours" type="number" min="0" step="1"
+          formControlName="hours" placeholder="e.g. 300"
+          readonly
+        />
+        @if (form.get('hours')?.errors?.['required'] && form.get('hours')?.touched) {
+          <small class="field-error">Hours is required.</small>
+        }
+        @if (form.get('hours')?.errors?.['digitsOnly'] && form.get('hours')?.touched) {
+          <small class="field-error">Numbers only.</small>
+        }
+      </div>
+
+      <!-- Status — locked to Active on first entry; only editable while modifying -->
+      <div class="field">
+        <label for="f-status">Status</label>
+        @if (mode === 'modify') {
+          <select id="f-status" formControlName="delFlag" class="status-select">
+            @for (opt of statusOptions; track opt) {
+              <option [value]="opt">{{ statusLabels[opt] }}</option>
+            }
+          </select>
+          @if (form.get('delFlag')?.errors?.['required'] && form.get('delFlag')?.touched) {
+            <small class="field-error">Status is required.</small>
+          }
+        } @else {
+          <input
+            id="f-status" type="text"
+            [value]="statusLabel(form.get('delFlag')?.value)"
+            disabled readonly
+          />
+          @if (mode === 'new') {
+            <small class="field-hint"></small>
+          }
+        }
+      </div>
+
+    </form>
+
+    <!-- ── Action footer — positioned after the last field ── -->
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+    </div>
+
+  </div>
+
+</section>

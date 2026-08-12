@@ -1,0 +1,123 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Transaction Master</h2>
+    </div>
+    @if (auth.isAdmin()) {
+      <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    }
+  </div>
+
+  <!-- Search card -->
+  <div class="card search-card">
+    <div class="search-row">
+
+      <!-- Transaction ID dropdown -->
+      <div class="field key-field">
+        <label for="s-tid">Transaction ID</label>
+        <select id="s-tid" [(ngModel)]="searchTrxnId" class="mono search-select" (ngModelChange)="doSearch()">
+          <option value="">All IDs</option>
+          @for (opt of trxnIdOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Transaction Number -->
+      <div class="field key-field">
+        <label for="s-num">Transaction No.</label>
+        <input
+          id="s-num" type="number" min="1"
+          [(ngModel)]="searchNumber"
+          placeholder="e.g. 1"
+          class="mono search-input" autocomplete="off"
+          (ngModelChange)="doSearch()"
+        />
+      </div>
+
+      <button class="btn btn-ghost" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-card-head">
+      <span class="table-label">
+        @if (showingAll) { All Records }
+        @else {
+          Results for &nbsp;<span class="mono search-term">"{{ searchTrxnLabel }}"</span>
+          @if (searchNumber) { &nbsp;/ Transaction No. &nbsp;<span class="mono search-term">{{ searchTrxnId }}-{{ padNum(searchNumber) }}</span> }
+        }
+      </span>
+      <span class="record-count">{{ tableRecords.length }} record(s)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col class="col-combined-id" />
+          <col class="col-trxn-name" />
+          <col class="col-description" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-combined-id">Transaction ID</th>
+            <th class="col-trxn-name">Transaction Name</th>
+            <th class="col-description">Category</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pagedRecords; track row.trxnId + '-' + row.trxnNumber) {
+            <tr>
+              <td class="col-combined-id">
+                <span class="id-chip mono">{{ combinedId(row) }}</span>
+              </td>
+              <td class="col-trxn-name">{{ row.trxnName }}</td>
+              <td class="col-description trxn-category-cell">{{ trxnLabel(row.trxnId) }}</td>
+              <td class="col-status">
+                <span class="status-badge"
+                  [class.status-active]="row.delFlag === 'A'"
+                  [class.status-inactive]="row.delFlag === 'D'"
+                ><span class="status-dot"></span>{{ row.delFlag === 'A' ? 'Active' : 'De-Active' }}</span>
+              </td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button class="btn-icon view-btn"   (click)="onView(row)">👁 View</button>
+                  @if (auth.isAdmin()) {
+                  <button class="btn-icon modify-btn" (click)="onModify(row)">✏ Modify</button>
+                }
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="5" class="empty-cell">
+                @if (showingAll) { No records found. }
+                @else { No records found for the given search criteria. }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (tableRecords.length > 0) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ tableRecords.length }}
+        </span>
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          (pageChange)="goToPage($event)"
+        ></app-pagination>
+      </div>
+    }
+  </div>
+
+</section>

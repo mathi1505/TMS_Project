@@ -1,0 +1,56 @@
+.top-line-card {
+  padding: 16px 18px;
+}
+
+.top-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.top-line-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 110px;
+}
+
+.top-line-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted, #94a3b8);
+}
+
+.download-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  flex-wrap: wrap;
+}
+
+.download-bar label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+.download-bar select {
+  width: auto;
+  min-width: 160px;
+}
+
+/* Download control lives in the page toolbar (top of the page) here,
+   so it doesn't need the card's top border/padding. */
+.top-download-bar {
+  padding: 0;
+  border-top: none;
+}
+
+/* Back button, on its own at the bottom of the page. */
+.bottom-toolbar {
+  justify-content: flex-end;
+}

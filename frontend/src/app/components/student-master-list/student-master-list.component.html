@@ -1,0 +1,141 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Student Master</h2>
+    </div>
+    <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+  </div>
+
+  <div class="card search-card">
+    <div class="search-row">
+
+      <!-- Internship / Training dropdown -->
+      <div class="field key-field">
+        <label for="s-type">Student Type</label>
+        <select
+          id="s-type"
+          [(ngModel)]="searchType"
+          class="status-select search-input"
+          (ngModelChange)="onTypeChange()"
+        >
+          <option value="">All</option>
+          @for (opt of studentTypeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Student Number -->
+      <div class="field key-field">
+        <label for="s-num">Student Number</label>
+        <input
+          id="s-num" type="number" min="1"
+          [(ngModel)]="searchNumber"
+          (ngModelChange)="doSearch()"
+          placeholder="e.g. 1"
+          class="mono search-input" autocomplete="off"
+        />
+      </div>
+
+      <button class="btn btn-ghost" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-card-head">
+      <span class="table-label">
+        @if (showingAll) { All Records }
+        @else {
+          Results for &nbsp;<span class="mono search-term">"{{ searchTypeLabel }}"</span>
+          @if (searchNumber) { &nbsp;/ Student Number &nbsp;<span class="mono search-term">{{ searchNumber }}</span> }
+        }
+      </span>
+      <span class="record-count">{{ tableRecords.length }} record(s)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col class="col-id" />
+          <col class="col-type" />
+          <col class="col-name" />
+          <col class="col-mode" />
+          <col class="col-batch" />
+          <col class="col-joining" />
+          <col class="col-mobile" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-id">Student ID</th>
+            <th class="col-type">Type</th>
+            <th class="col-name">Name</th>
+            <th class="col-mode">Mode</th>
+            <th class="col-batch">Batch</th>
+            <th class="col-joining">Joining Date</th>
+            <th class="col-mobile">Mobile</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber) {
+            <tr>
+              <td class="col-id"><span class="id-chip mono">{{ combinedId(row) }}</span></td>
+             <td class="col-type">
+  <span
+    class="type-badge"
+    [ngStyle]="getBadgeStyle(typeLabel(row))">
+    
+    {{ typeLabel(row) }}
+
+  </span>
+</td>
+              <td class="col-name">{{ row.studentName }}</td>
+              <td class="col-mode">{{ studyModeLabel(row) }}</td>
+              <td class="col-batch">{{ row.batch }}</td>
+              <td class="col-joining mono">{{ row.joiningDate }}</td>
+              <td class="col-mobile mono">{{ row.mobileNo }}</td>
+              <td class="col-status">
+                <span class="status-badge"
+                  [class.status-active]="row.delFlag === 'A'"
+                  [class.status-inactive]="row.delFlag === 'D'"
+                ><span class="status-dot"></span>{{ statusLabel(row) }}</span>
+              </td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button class="btn-icon view-btn"   (click)="onView(row)">👁 View</button>
+                  <button class="btn-icon modify-btn" (click)="onModify(row)">✏ Modify</button>
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="9" class="empty-cell">
+                @if (showingAll) { No records found. }
+                @else { No records found for the given search criteria. }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (tableRecords.length > 0) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ tableRecords.length }}
+        </span>
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          (pageChange)="goToPage($event)"
+        ></app-pagination>
+      </div>
+    }
+  </div>
+
+</section>

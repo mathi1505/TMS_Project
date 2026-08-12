@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.page-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+  font-family: Arial, sans-serif;
+  white-space: nowrap;
+}
+
+.page-jump-input {
+  width: 48px;
+  height: 30px;
+  text-align: center;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  color: var(--text, #111827);
+  background: #fff;
+}
+
+.page-jump-input:focus {
+  outline: none;
+  border-color: var(--accent, #4f46e5);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}

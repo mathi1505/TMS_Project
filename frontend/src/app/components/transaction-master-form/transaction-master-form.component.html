@@ -1,0 +1,129 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>Transaction Master</h2>
+      @if (mode !== 'new' && combinedId) {
+        <span class="key-badge mono" title="Transaction Key">{{ combinedId }}</span>
+      }
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <!-- Transaction ID (drop-down) -->
+      <div class="field key-field">
+        <label for="f-tid">Transaction ID <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <select id="f-tid" formControlName="trxnId" class="mono status-select">
+            <option value="">— Select ID —</option>
+            @for (opt of trxnIdOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input
+            id="f-tid" type="text"
+            [value]="form.get('trxnId')?.value"
+            disabled readonly class="mono"
+          />
+        }
+        @if (form.get('trxnId')?.errors?.['required'] && form.get('trxnId')?.touched) {
+          <small class="field-error">Transaction ID is required.</small>
+        }
+        @if (selectedDescription) {
+          <small class="field-hint">{{ selectedDescription }}</small>
+        }
+      </div>
+
+      <!-- Transaction Number (auto-generated) -->
+      <div class="field key-field">
+        <label for="f-num">
+          Transaction Number
+          <span class="key-badge" title="Auto-generated">AUTO</span>
+        </label>
+        @if (mode === 'new') {
+          <input
+            id="f-num" type="text"
+            [value]="previewCombinedId || 'Select Transaction ID first'"
+            disabled readonly class="mono"
+          />
+          <small class="field-hint">Running serial, auto-assigned on Save.</small>
+        } @else {
+          <input
+            id="f-num" type="text"
+            [value]="combinedId"
+            disabled readonly class="mono"
+          />
+        }
+      </div>
+
+      <!-- Transaction Name -->
+      <div class="field field-wide">
+        <label for="f-name">Transaction Name <span class="req">*</span></label>
+        <input
+          id="f-name" type="text"
+          formControlName="trxnName"
+          maxlength="50"
+          placeholder="e.g. Trainer Name"
+        />
+        @if (form.get('trxnName')?.errors?.['required'] && form.get('trxnName')?.touched) {
+          <small class="field-error">Transaction Name is required.</small>
+        }
+        @if (form.get('trxnName')?.errors?.['maxlength'] && form.get('trxnName')?.touched) {
+          <small class="field-error">Maximum 50 characters.</small>
+        }
+      </div>
+
+      <!-- Del Flag / Status -->
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-del" formControlName="delFlag" class="status-select">
+            @for (opt of delFlagOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (form.get('delFlag')?.errors?.['required'] && form.get('delFlag')?.touched) {
+            <small class="field-error">Status is required.</small>
+          }
+        } @else {
+          <input
+            id="f-del" type="text"
+            [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'D – De-Active'"
+            disabled readonly
+          />
+          @if (mode === 'new') {
+            <small class="field-hint"></small>
+          }
+        }
+      </div>
+
+    </form>
+
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+    </div>
+  </div>
+
+</section>

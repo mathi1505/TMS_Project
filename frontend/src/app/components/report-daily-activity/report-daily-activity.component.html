@@ -1,0 +1,134 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Student Daily Activity Report</h2>
+    </div>
+    <div class="download-bar top-download-bar">
+      <label for="da-download">Download</label>
+      <select id="da-download" [(ngModel)]="downloadFormat" class="status-select">
+        <option value="">Select format…</option>
+        @for (opt of downloadOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <button class="btn btn-primary" (click)="onDownload()">⬇ Download</button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="banner banner-info">Loading…</div>
+  }
+
+  @if (!loading && notFound) {
+    <div class="banner banner-error">No record found for {{ studentId }}-{{ studentNumber }}.</div>
+  }
+
+  @if (!loading && header) {
+    <!-- Top line: display-only student summary -->
+    <div class="card top-line-card">
+      <div class="top-line">
+        <div class="top-line-item"><span class="top-line-label">Student No.</span><span class="mono">{{ header.studentId }}-{{ header.studentNumber }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Name</span><span>{{ header.studentName }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Type</span><span>{{ header.studentType }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Joining Date</span><span class="mono">{{ header.joiningDate }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Trainer</span><span>{{ header.trainerName }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Mobile</span><span class="mono">{{ header.mobileNo }}</span></div>
+      </div>
+    </div>
+
+    <!-- Repeated line: month/year filters -->
+    <div class="card search-card">
+      <div class="search-row">
+        <div class="field key-field">
+          <label for="da-month">Month</label>
+          <select id="da-month" [(ngModel)]="selectedMonth" (ngModelChange)="onFilterChange()" class="status-select search-input">
+            <option [ngValue]="null">All</option>
+            @for (opt of monthOptions; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field key-field">
+          <label for="da-year">Year</label>
+          <select id="da-year" [(ngModel)]="selectedYear" (ngModelChange)="onFilterChange()" class="status-select search-input">
+            <option [ngValue]="null">All</option>
+            @for (y of yearOptions; track y) {
+              <option [ngValue]="y">{{ y }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-card-head">
+        <span class="table-label">Daily Activities</span>
+        <span class="record-count">{{ activities.length }} record(s)</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <colgroup>
+            <col class="col-joining" />
+            <col class="col-joining" />
+            <col class="col-mode" />
+            <col class="col-mode" />
+            <col class="col-type" />
+            <col class="col-name" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Tran Date</th>
+              <th>Value Date</th>
+              <th>Time In</th>
+              <th>Time Out</th>
+              <th>Technology</th>
+              <th>Topic Covered</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of pagedRows; track row.tranId + '::' + row.tranNumber + '::' + row.tranDate) {
+              <tr>
+                <td class="mono">{{ row.tranDate }}</td>
+                <td class="mono">{{ row.valueDate }}</td>
+                <td class="mono">{{ row.timeIn }}</td>
+                <td class="mono">{{ row.timeOut }}</td>
+                <td>{{ row.technology }}</td>
+                <td>{{ row.topicCovered }}</td>
+                <td>{{ row.tranParticular }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon view-btn" (click)="onViewDetails(row)">👁 View details</button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="8" class="empty-cell">No daily activity records found for the selected period.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (activities.length > 0) {
+        <div class="pagination-bar">
+          <span class="pagination-info">Showing {{ rangeStart }}–{{ rangeEnd }} of {{ activities.length }}</span>
+          <app-pagination [currentPage]="currentPage" [totalPages]="totalPages" (pageChange)="goToPage($event)"></app-pagination>
+        </div>
+      }
+    </div>
+
+    <!-- Back, on its own at the bottom of the page -->
+    <div class="page-toolbar bottom-toolbar">
+      <button class="btn btn-ghost" (click)="onBack()">← Back to Search</button>
+    </div>
+  }
+
+</section>
