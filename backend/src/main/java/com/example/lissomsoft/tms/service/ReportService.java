@@ -48,9 +48,6 @@ public class ReportService {
     private final StudentDetRepository studentDetRepository;
     private final TrxnMasterRepository trxnMasterRepository;
 
-    // ---------------------------------------------------------------
-    // Master search screen
-    // ---------------------------------------------------------------
 
     public List<ReportStudentSummary> searchStudents(String name, String studentType, Integer studentNumber) {
         return filterStudentMasters(name, studentType, studentNumber).stream()
@@ -58,11 +55,7 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Same search/filter logic used by both the on-screen summary list and the
-     * "all columns" export, so the export always matches what's currently listed
-     * on the Student Information Report screen.
-     */
+
     private List<StudentMaster> filterStudentMasters(String name, String studentType, Integer studentNumber) {
 
         List<StudentMaster> all = studentMasterRepository.findAll().stream()
@@ -95,11 +88,7 @@ public class ReportService {
         );
     }
 
-    /**
-     * The Student Master "assignedStaff" field only stores a key like "TR-1"
-     * (Trxn Master ID + number). Resolve it against Transaction Master to show
-     * the actual trainer name on reports instead of the raw key.
-     */
+
     private String resolveTrainerName(String assignedStaff) {
         if (assignedStaff == null || assignedStaff.isBlank()) return "";
 
@@ -130,9 +119,6 @@ public class ReportService {
         return dashIdx > 0 ? rest.substring(0, dashIdx) : rest;
     }
 
-    // ---------------------------------------------------------------
-    // Daily Activity screen
-    // ---------------------------------------------------------------
 
     public ReportDailyActivityResponse dailyActivity(String studentId, Integer studentNumber, Integer month, Integer year) {
 
@@ -162,11 +148,7 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Same search/filter logic used by both the on-screen activity list and the
-     * "all columns" export, so the export always matches what's currently listed
-     * on the Student Daily Activity Report screen.
-     */
+
     private List<StudentDet> filterStudentDets(String studentId, Integer studentNumber, Integer month, Integer year) {
 
         List<StudentDet> all = studentDetRepository.findByStudentIdIgnoreCaseAndStudentNumber(
@@ -196,7 +178,7 @@ public class ReportService {
                 d.getAttendInTime(),
                 d.getAttendOutTime(),
                 d.getTechnology(),
-                d.getTranName(),
+                d.getNarration(),
                 d.getTranParticular(),
                 d.getCourseId(),
                 d.getCourseDetId(),
@@ -205,13 +187,7 @@ public class ReportService {
         );
     }
 
-    // ---------------------------------------------------------------
-    // Excel / PDF export - Student Information (master search results)
-    // ---------------------------------------------------------------
 
-    // Full column set of the student_master table (in entity field order) —
-    // the export always includes every database column, whether the current
-    // filter matches a single student or the whole list.
     private static final String[] STUDENT_EXPORT_HEADERS = {
             "Student ID", "Student No", "Student Name", "Study Mode", "Assigned Staff",
             "Batch", "Native Place", "Joining Date", "Mobile No", "Emergency Contact No",
@@ -219,6 +195,16 @@ public class ReportService {
             "Experience", "Reference By", "Paid Status", "Total Agreed Fee",
             "Duration Frequency", "Total Duration", "Student Status", "Entry By",
             "Entry Date", "Del Flag"
+    };
+
+
+    private static final int[] STUDENT_EXPORT_WIDTHS = {
+            12, 10, 22, 14, 18,
+            10, 18, 14, 14, 18,
+            14, 26, 18, 26, 12,
+            14, 16, 12, 16,
+            18, 14, 14, 14,
+            14, 10
     };
 
     public ExportFileResponse exportStudents(String name, String studentType, Integer studentNumber, String format) {
@@ -242,7 +228,7 @@ public class ReportService {
                 s.getStudentNumber() == null ? "" : String.valueOf(s.getStudentNumber()),
                 nvl(s.getStudentName()),
                 nvl(s.getStudyMode()),
-                nvl(s.getAssignedStaff()),
+                resolveTrainerName(s.getAssignedStaff()),
                 s.getBatch() == null ? "" : String.valueOf(s.getBatch()),
                 nvl(s.getNativePlace()),
                 s.getJoiningDate() == null ? "" : s.getJoiningDate().toString(),
@@ -287,7 +273,12 @@ public class ReportService {
                 }
             }
 
-            for (int i = 0; i < STUDENT_EXPORT_HEADERS.length; i++) sheet.autoSizeColumn(i);
+            setColumnWidths(sheet, STUDENT_EXPORT_WIDTHS);
+
+            if (!rows.isEmpty()) {
+                sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(
+                        0, rows.size(), 0, STUDENT_EXPORT_HEADERS.length - 1));
+            }
 
             workbook.write(out);
             return out.toByteArray();
@@ -298,16 +289,10 @@ public class ReportService {
 
     private byte[] buildStudentsPdf(List<StudentMaster> rows) {
         List<String[]> data = rows.stream().map(this::studentExportRow).collect(Collectors.toList());
-        return buildPdfTable("Student Information Report", STUDENT_EXPORT_HEADERS, data);
+        return buildPdfTable("Student Information Report", STUDENT_EXPORT_HEADERS, data, STUDENT_EXPORT_WIDTHS);
     }
 
-    // ---------------------------------------------------------------
-    // Excel / PDF export - Daily Activity
-    // ---------------------------------------------------------------
 
-    // Full column set of the student_det table (in entity field order) — the
-    // export always includes every database column for every activity row
-    // currently listed on the Student Daily Activity Report screen.
     private static final String[] DAILY_ACTIVITY_EXPORT_HEADERS = {
             "Student ID", "Student No", "Student Name", "Tran Name", "Technology",
             "Tran Date", "Value Date", "Time In", "Time Out", "Tran ID", "Tran No",
@@ -315,9 +300,17 @@ public class ReportService {
             "Entry By", "Entry Date", "Del Flag"
     };
 
+
+    private static final int[] DAILY_ACTIVITY_EXPORT_WIDTHS = {
+            12, 10, 22, 18, 16,
+            12, 12, 10, 10, 10, 10,
+            22, 10, 10, 30, 22,
+            14, 14, 10
+    };
+
     public ExportFileResponse exportDailyActivity(String studentId, Integer studentNumber, Integer month, Integer year, String format) {
 
-        // Ensures the student exists and gives us a clean error + a header for the file name.
+
         ReportDailyActivityHeader header = dailyActivity(studentId, studentNumber, month, year).getHeader();
         List<StudentDet> rows = filterStudentDets(studentId, studentNumber, month, year);
 
@@ -332,6 +325,53 @@ public class ReportService {
             return fileResponse("daily-activity-" + fileSuffix + ".pdf", PDF_CONTENT_TYPE, bytes);
         }
         throw ApiException.badRequest("Invalid download option. Choose either Excel or PDF.");
+    }
+
+    /**
+     * Export for the Student Daily Activity list screen (all students), used both
+     * for the page's own filters and for a Reports Dash Board activity tile click
+     * (which passes one or more raw Tran_particular values, comma-separated).
+     */
+    public ExportFileResponse exportActivities(String studentType, String tranParticular, Integer studentNumber, String format) {
+
+        List<StudentDet> rows = filterStudentDetsForList(studentType, tranParticular, studentNumber);
+
+        if (isExcel(format)) {
+            byte[] bytes = buildDailyActivityExcel(rows);
+            return fileResponse("student-daily-activity.xlsx", XLSX_CONTENT_TYPE, bytes);
+        }
+        if (isPdf(format)) {
+            byte[] bytes = buildPdfTable("Student Daily Activity Report", DAILY_ACTIVITY_EXPORT_HEADERS,
+                    rows.stream().map(this::dailyActivityExportRow).collect(Collectors.toList()),
+                    DAILY_ACTIVITY_EXPORT_WIDTHS);
+            return fileResponse("student-daily-activity.pdf", PDF_CONTENT_TYPE, bytes);
+        }
+        throw ApiException.badRequest("Invalid download option. Choose either Excel or PDF.");
+    }
+
+    private List<StudentDet> filterStudentDetsForList(String studentType, String tranParticular, Integer studentNumber) {
+
+        String typeFilter = (studentType == null) ? "" : studentType.trim().toUpperCase(Locale.ROOT);
+
+        List<String> particularFilter = (tranParticular == null || tranParticular.isBlank())
+                ? List.of()
+                : java.util.Arrays.stream(tranParticular.split(","))
+                    .map(String::trim)
+                    .filter(v -> !v.isEmpty())
+                    .collect(Collectors.toList());
+
+        List<StudentDet> all = studentDetRepository.findAll().stream()
+                .filter(d -> "A".equalsIgnoreCase(d.getDelFlag()))
+                .collect(Collectors.toList());
+
+        return all.stream()
+                .filter(d -> typeFilter.isEmpty() || typeCodeOf(d.getStudentId()).equalsIgnoreCase(typeFilter))
+                .filter(d -> particularFilter.isEmpty()
+                        || particularFilter.stream().anyMatch(v -> v.equalsIgnoreCase(nvl(d.getTranParticular()).trim())))
+                .filter(d -> studentNumber == null || studentNumber.equals(d.getStudentNumber()))
+                .sorted(Comparator.comparing(StudentDet::getTranDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
     }
 
     private String[] dailyActivityExportRow(StudentDet d) {
@@ -379,7 +419,13 @@ public class ReportService {
                 }
             }
 
-            for (int i = 0; i < DAILY_ACTIVITY_EXPORT_HEADERS.length; i++) sheet.autoSizeColumn(i);
+            setColumnWidths(sheet, DAILY_ACTIVITY_EXPORT_WIDTHS);
+
+            // Header row-la Excel filter dropdown (AutoFilter) add panra line
+            if (!rows.isEmpty()) {
+                sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(
+                        0, rows.size(), 0, DAILY_ACTIVITY_EXPORT_HEADERS.length - 1));
+            }
 
             workbook.write(out);
             return out.toByteArray();
@@ -394,12 +440,10 @@ public class ReportService {
 
         List<String[]> data = rows.stream().map(this::dailyActivityExportRow).collect(Collectors.toList());
 
-        return buildPdfTable(title, DAILY_ACTIVITY_EXPORT_HEADERS, data);
+        return buildPdfTable(title, DAILY_ACTIVITY_EXPORT_HEADERS, data, DAILY_ACTIVITY_EXPORT_WIDTHS);
     }
 
-    // ---------------------------------------------------------------
-    // Shared helpers
-    // ---------------------------------------------------------------
+
 
     private static final String XLSX_CONTENT_TYPE =
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -421,6 +465,19 @@ public class ReportService {
         return o == null ? "" : String.valueOf(o);
     }
 
+    /**
+     * Sets fixed column widths (in characters) on an Excel sheet. Used instead of
+     * sheet.autoSizeColumn(), which requires AWT font metrics that aren't reliably
+     * available in headless server environments and produces inconsistent widths.
+     */
+    private void setColumnWidths(Sheet sheet, int[] widthsInChars) {
+        for (int i = 0; i < widthsInChars.length; i++) {
+            // POI width units are 1/256th of a character; pad a couple of chars
+            // for comfortable spacing around the content.
+            sheet.setColumnWidth(i, (widthsInChars[i] + 2) * 256);
+        }
+    }
+
     private CellStyle headerStyle(XSSFWorkbook workbook) {
         CellStyle style = workbook.createCellStyle();
         org.apache.poi.ss.usermodel.Font font = workbook.createFont();
@@ -432,7 +489,7 @@ public class ReportService {
         return style;
     }
 
-    private byte[] buildPdfTable(String title, String[] headers, List<String[]> rows) {
+    private byte[] buildPdfTable(String title, String[] headers, List<String[]> rows, int[] relativeWidths) {
         try {
             Document document = new Document(PageSize.A4.rotate(), 24, 24, 32, 32);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -445,6 +502,15 @@ public class ReportService {
 
             PdfPTable table = new PdfPTable(headers.length);
             table.setWidthPercentage(100);
+            if (relativeWidths != null && relativeWidths.length == headers.length) {
+                try {
+                    float[] widths = new float[relativeWidths.length];
+                    for (int i = 0; i < relativeWidths.length; i++) widths[i] = relativeWidths[i];
+                    table.setWidths(widths);
+                } catch (Exception ignored) {
+                    // Falls back to equal column widths if the array is malformed.
+                }
+            }
 
             Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Font.NORMAL, java.awt.Color.WHITE);
             for (String head : headers) {

@@ -1,0 +1,66 @@
+<section class="screen dash-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Reports Dash Board</h2>
+    </div>
+    <button class="btn btn-ghost" (click)="load()" [disabled]="loading">
+      ⟳ Refresh
+    </button>
+  </div>
+
+  @if (loading && !summary) {
+    <div class="card dash-loading">Loading dash board…</div>
+  }
+
+  @if (summary) {
+
+    <!-- Student Master Dash Board -->
+    <div class="dash-section">
+      <div class="dash-section-head">
+        <h3>Student Master Dash Board</h3>
+        <span class="dash-section-hint">From Student Master</span>
+      </div>
+      <div class="tile-grid">
+        @for (tile of studentMasterTiles; track tile.title) {
+          <div
+            class="dash-tile dash-tile-clickable"
+            [style.--tile-color]="tile.color"
+            [style.--tile-soft]="tile.colorSoft"
+            role="button"
+            tabindex="0"
+            (click)="onMasterTileClick(tile)"
+            (keyup.enter)="onMasterTileClick(tile)">
+            <span class="dash-tile-value">{{ tile.value }}</span>
+            <span class="dash-tile-title">{{ tile.title }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Student Activity Dash Board -->
+    <div class="dash-section">
+      <div class="dash-section-head">
+        <h3>Student Activity Dash Board <span class="dash-section-sub">[Tran Type / Particular] wise</span></h3>
+        <span class="dash-section-hint">From Student Daily Activity</span>
+      </div>
+      <div class="tile-grid">
+        @for (tile of studentActivityTiles; track tile.title) {
+          <div
+            class="dash-tile dash-tile-clickable"
+            [style.--tile-color]="tile.color"
+            [style.--tile-soft]="tile.colorSoft"
+            role="button"
+            tabindex="0"
+            (click)="onActivityTileClick(tile)"
+            (keyup.enter)="onActivityTileClick(tile)">
+            <span class="dash-tile-value">{{ tile.value }}</span>
+            <span class="dash-tile-title">{{ tile.title }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+  }
+
+</section>

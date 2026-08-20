@@ -25,7 +25,7 @@
   }
 
   @if (!loading && header) {
-    <!-- Top line: display-only student summary -->
+   
     <div class="card top-line-card">
       <div class="top-line">
         <div class="top-line-item"><span class="top-line-label">Student No.</span><span class="mono">{{ header.studentId }}-{{ header.studentNumber }}</span></div>
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <!-- Repeated line: month/year filters -->
+  
     <div class="card search-card">
       <div class="search-row">
         <div class="field key-field">
@@ -125,7 +125,7 @@
       }
     </div>
 
-    <!-- Back, on its own at the bottom of the page -->
+  
     <div class="page-toolbar bottom-toolbar">
       <button class="btn btn-ghost" (click)="onBack()">← Back to Search</button>
     </div>

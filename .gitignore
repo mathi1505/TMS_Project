@@ -1,0 +1,15 @@
+# Angular
+frontend/.angular/
+frontend/node_modules/
+frontend/dist/
+
+# Gradle
+backend/.gradle/
+backend/build/
+
+# IntelliJ IDEA
+backend/.idea/
+*.iml
+
+# ZIP files
+*.zip

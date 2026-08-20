@@ -24,7 +24,7 @@ export class TransactionDetailService extends CachedCrudService<TransactionDetai
   combinedDetId(r: TransactionDetail): string {
     return `${r.trxnId}-${this.padNum(r.masterNumber)}`;
   }
-
+ 
   getByKey(
     trxnId: string,
     masterNumber: number,

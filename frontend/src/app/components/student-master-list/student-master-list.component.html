@@ -4,7 +4,19 @@
     <div class="page-title-group">
       <h2>Student Master</h2>
     </div>
-    <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    <div class="page-toolbar-actions">
+      <div class="download-bar top-download-bar">
+        <label for="sm-download">Download</label>
+        <select id="sm-download" [(ngModel)]="downloadFormat" class="status-select">
+          <option value="">Select format…</option>
+          @for (opt of downloadOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <button class="btn btn-primary" (click)="onDownload()">⬇ Download</button>
+      </div>
+      <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    </div>
   </div>
 
   <div class="card search-card">

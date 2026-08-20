@@ -7,11 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * One repeated "Daily Activity" line: Tran Date, Value Date, Time In, Time Out,
- * Technology, Topic Covered, Tran_Particular - plus the composite key + extra
- * fields surfaced only via "View details".
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

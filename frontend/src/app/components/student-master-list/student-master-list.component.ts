@@ -1,13 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { StudentMaster } from '../../models/student-master.model';
 import { StudentMasterService } from '../../services/student-master.service';
 import { ConfigDetailService } from '../../services/config-master.service';
+import { ReportService } from '../../services/report.service';
+import { ToastService } from '../../services/toast.service';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { Paginator } from '../../services/paginator';
+import { ReportDownloadFormat, REPORT_DOWNLOAD_OPTIONS } from '../../models/report.model';
 
 @Component({
   selector: 'app-student-master-list',
@@ -27,6 +30,9 @@ export class StudentMasterListComponent implements OnInit, OnDestroy {
 
   studentTypeOptions: { value: string; label: string }[] = [];
 
+  downloadOptions = REPORT_DOWNLOAD_OPTIONS;
+  downloadFormat: ReportDownloadFormat | '' = '';
+
   readonly paginator = new Paginator<StudentMaster>(() => this.tableRecords);
 
   private dataSub?: Subscription;
@@ -35,14 +41,29 @@ export class StudentMasterListComponent implements OnInit, OnDestroy {
   constructor(
     private svc: StudentMasterService,
     private configDetSvc: ConfigDetailService,
-    private router: Router
+    private reportSvc: ReportService,
+    private toast: ToastService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
 
+    // Arriving from the Reports Dash Board with a student-type tile clicked.
+    const incomingType = this.route.snapshot.queryParamMap.get('studentType');
+    if (incomingType) {
+      this.searchType = incomingType;
+    }
+
+    let appliedIncomingFilter = false;
     this.dataSub = this.svc.data$.subscribe(rows => {
       this.allRecords = rows;
       this.refreshTableFromCache();
+      if (incomingType && !appliedIncomingFilter) {
+        appliedIncomingFilter = true;
+        this.showingAll = false;
+        this.paginator.reset();
+      }
     });
     this.svc.getAll().subscribe();
 
@@ -144,6 +165,17 @@ getBadgeStyle(type: string) {
     this.showingAll     = true;
     this.paginator.reset();
     this.refreshTableFromCache();
+  }
+
+  onDownload(): void {
+    if (this.downloadFormat !== 'excel' && this.downloadFormat !== 'pdf') {
+      this.toast.error('Invalid download option. Please choose Excel or PDF.');
+      return;
+    }
+    this.reportSvc.exportStudents('', this.searchType, this.searchNumber, this.downloadFormat).subscribe({
+      next: () => this.toast.success('Download started.'),
+      error: (err: Error) => this.toast.error(err.message)
+    });
   }
 
   onNew():                    void { this.router.navigate(['/student-master-form'], { queryParams: { mode: 'new' } }); }

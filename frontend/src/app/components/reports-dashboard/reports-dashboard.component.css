@@ -1,0 +1,127 @@
+.dash-screen {
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.dash-loading {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.dash-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 18px 22px 22px;
+  margin-bottom: 18px;
+}
+
+.dash-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dash-section-head h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-section-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: normal;
+  margin-left: 4px;
+}
+
+.dash-section-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+
+.dash-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  font-family: var(--font-body);
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--tile-color) 28%, var(--line));
+  background: linear-gradient(155deg, var(--tile-soft) 0%, var(--surface) 78%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--tile-color);
+}
+
+.dash-tile-clickable {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dash-tile-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  border-color: color-mix(in srgb, var(--tile-color) 45%, var(--line));
+}
+
+.dash-tile-clickable:focus-visible {
+  outline: 2px solid var(--tile-color);
+  outline-offset: 2px;
+}
+
+.dash-tile-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--tile-color);
+  line-height: 1.1;
+}
+
+.dash-tile-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 640px) {
+  .tile-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 420px) {
+  .tile-grid { grid-template-columns: 1fr; }
+}

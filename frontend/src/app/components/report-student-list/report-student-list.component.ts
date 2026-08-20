@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -21,7 +21,7 @@ import { ReportDownloadFormat, ReportStudentSummary, REPORT_DOWNLOAD_OPTIONS } f
 })
 export class ReportStudentListComponent implements OnInit, OnDestroy {
 
-  // Search inputs
+
   searchName = '';
   searchType = '';
   searchNumber: number | null = null;
@@ -33,7 +33,7 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   records: ReportStudentSummary[] = [];
   loading = false;
 
-  // Name suggestions dropdown
+
   nameSuggestions: ReportStudentSummary[] = [];
   showNameSuggestions = false;
   private readonly MAX_SUGGESTIONS = 8;
@@ -48,10 +48,17 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
     private reportSvc: ReportService,
     private configDetSvc: ConfigDetailService,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    // Arriving from the Reports Dash Board with a student-type tile clicked.
+    const incomingType = this.route.snapshot.queryParamMap.get('studentType');
+    if (incomingType) {
+      this.searchType = incomingType;
+    }
+
     this.configSub = this.configDetSvc.activeData$.subscribe(rows => {
       this.studentTypeOptions = rows
         .filter(r => r.configMaster === 'STUD' && r.configName.trim() !== 'Employee')
@@ -59,7 +66,7 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
     });
     this.configDetSvc.getAll().subscribe();
 
-    // Name filter starts filtering as the user types (debounced).
+
     this.nameSub = this.nameInput$.pipe(debounceTime(250), distinctUntilChanged()).subscribe(() => this.search());
 
     this.search();
@@ -85,7 +92,7 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   }
 
   onNameBlur(): void {
-    // Delay so a click on a suggestion registers before the list is hidden.
+   
     setTimeout(() => { this.showNameSuggestions = false; }, 150);
   }
 
@@ -137,8 +144,7 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   }
 
   onFullView(row: ReportStudentSummary): void {
-    // Open the real Student Master page in read-only "view" mode, instead of
-    // a separate report page, so this always reflects the actual master record.
+
     this.router.navigate(['/student-master-form'], {
       queryParams: { mode: 'view', id: row.studentId, studentNumber: row.studentNumber, returnTo: '/report' }
     });

@@ -43,14 +43,13 @@
   min-width: 160px;
 }
 
-/* Download control lives in the page toolbar (top of the page) here,
-   so it doesn't need the card's top border/padding. */
+
 .top-download-bar {
   padding: 0;
   border-top: none;
 }
 
-/* Back button, on its own at the bottom of the page. */
+
 .bottom-toolbar {
   justify-content: flex-end;
 }

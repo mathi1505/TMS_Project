@@ -3,7 +3,7 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'course-master', pathMatch: 'full' },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
   {
     path: 'login',
@@ -125,6 +125,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/reports-dashboard/reports-dashboard.component').then(m => m.ReportsDashboardComponent),
+    title: 'Reports Dash Board'
+  },
+
+  {
     path: 'report',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -140,5 +148,5 @@ export const routes: Routes = [
     title: 'Student Daily Activity Report'
   },
 
-  { path: '**', redirectTo: 'course-master' }
+  { path: '**', redirectTo: 'dashboard' }
 ];

@@ -25,7 +25,7 @@
 
       <!-- Course ID -->
       <div class="field key-field">
-        <label for="f-id">Course ID</label>
+        <label for="f-id">Course ID<span class="req">*</span></label>
         <input
           id="f-id" type="text" formControlName="id"
           maxlength="2" placeholder="e.g. FE" class="mono"
@@ -50,7 +50,7 @@
 
       <!-- Technology -->
       <div class="field">
-        <label for="f-tech">Technology</label>
+        <label for="f-tech">Technology<span class="req">*</span></label>
         <input
           id="f-tech" type="text" formControlName="technology"
           maxlength="25" placeholder="e.g. Frontend"
@@ -66,7 +66,7 @@
 
       <!-- Topics Covered -->
       <div class="field field-wide">
-        <label for="f-topic">Topics Covered</label>
+        <label for="f-topic">Topics Covered<span class="req">*</span></label>
         <input
           id="f-topic" type="text" formControlName="topic"
           maxlength="50" placeholder="e.g. Angular Fundamentals"
@@ -82,7 +82,7 @@
 
       <!-- Duration -->
       <div class="field">
-        <label for="f-dur">Duration (Weeks)</label>
+        <label for="f-dur">Duration (Weeks)<span class="req">*</span></label>
         <input
           id="f-dur" type="number" min="0" step="0.5"
           formControlName="durationWeeks" placeholder="e.g. 10"
@@ -99,7 +99,7 @@
 
       <!-- Hours -->
       <div class="field">
-        <label for="f-hours">Hours</label>
+        <label for="f-hours">Hours<span class="req">*</span></label>
         <input
           id="f-hours" type="number" min="0" step="1"
           formControlName="hours" placeholder="e.g. 300"
@@ -115,7 +115,7 @@
 
       <!-- Status — locked to Active on first entry; only editable while modifying -->
       <div class="field">
-        <label for="f-status">Status</label>
+        <label for="f-status">Status<span class="req">*</span></label>
         @if (mode === 'modify') {
           <select id="f-status" formControlName="delFlag" class="status-select">
             @for (opt of statusOptions; track opt) {

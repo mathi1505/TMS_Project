@@ -4,7 +4,19 @@
     <div class="page-title-group">
       <h2>Student Daily Activity</h2>
     </div>
-    <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    <div class="page-toolbar-actions">
+      <div class="download-bar top-download-bar">
+        <label for="sd-download">Download</label>
+        <select id="sd-download" [(ngModel)]="downloadFormat" class="status-select">
+          <option value="">Select format…</option>
+          @for (opt of downloadOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <button class="btn btn-primary" (click)="onDownload()">⬇ Download</button>
+      </div>
+      <button class="btn btn-primary" (click)="onNew()">＋ New</button>
+    </div>
   </div>
 
   <!-- Search card -->
@@ -20,6 +32,19 @@
           <option value="">— All Types —</option>
           @for (opt of studentTypeOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Particular / Status dropdown -->
+      <div class="field">
+        <label for="s-particular">Particular</label>
+        <select id="s-particular" class="status-select"
+          [(ngModel)]="searchParticular"
+          (ngModelChange)="onParticularChange()">
+          <option value="">— All Particulars —</option>
+          @for (opt of particularOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
           }
         </select>
       </div>
@@ -46,7 +71,9 @@
       <span class="table-label">
         @if (showingAll) { All Records }
         @else {
-          Results for &nbsp;<span class="mono search-term">"{{ searchTypeLabel }}"</span>
+          Results for
+          @if (searchTypeLabel) { &nbsp;<span class="mono search-term">"{{ searchTypeLabel }}"</span> }
+          @if (searchParticularLabel) { &nbsp;<span class="mono search-term">"{{ searchParticularLabel }}"</span> }
           @if (searchNumber) { &nbsp;/ Student Number &nbsp;<span class="mono search-term">{{ searchNumber }}</span> }
         }
       </span>

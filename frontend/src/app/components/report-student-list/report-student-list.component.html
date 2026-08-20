@@ -19,7 +19,7 @@
   <div class="card search-card">
     <div class="search-row">
 
-      <!-- Student Name (like '%name%' filter, starts filtering as you type) -->
+      
       <div class="field field-wide name-field">
         <label for="r-name">Student Name</label>
         <input
@@ -43,7 +43,7 @@
         }
       </div>
 
-      <!-- Student Type (from Config Table: Internship / Training) -->
+     
       <div class="field key-field">
         <label for="r-type">Student Type</label>
         <select
@@ -106,7 +106,7 @@
             <th class="col-status">Status</th>
             <th class="col-actions">Actions</th>
           </tr>
-        </thead>
+        </thead>  
         <tbody>
           @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber) {
             <tr>

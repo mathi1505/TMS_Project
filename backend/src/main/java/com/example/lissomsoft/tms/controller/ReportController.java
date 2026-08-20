@@ -51,4 +51,14 @@ public class ReportController {
             @RequestParam String format) {
         return service.exportDailyActivity(studentId, studentNumber, month, year, format);
     }
+
+
+    @GetMapping("/activities/export")
+    public ExportFileResponse exportActivities(
+            @RequestParam(required = false) String studentType,
+            @RequestParam(required = false) String tranParticular,
+            @RequestParam(required = false) Integer studentNumber,
+            @RequestParam String format) {
+        return service.exportActivities(studentType, tranParticular, studentNumber, format);
+    }
 }

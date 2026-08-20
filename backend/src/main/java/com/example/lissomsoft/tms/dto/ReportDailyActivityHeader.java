@@ -6,10 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-/**
- * Top line (display-only) of the Daily Activity report screen:
- * Student Number, Student Name, Student Type, Joining Date, Trainer Name, Mobile Number.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

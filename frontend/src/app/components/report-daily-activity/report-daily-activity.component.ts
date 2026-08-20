@@ -97,9 +97,7 @@ export class ReportDailyActivityComponent implements OnInit {
   }
 
   onViewDetails(row: ReportDailyActivityRow): void {
-    // Open the real Daily Activity form (Student Detail form) in read-only
-    // "view" mode instead of an inline modal, so this always reflects the
-    // actual transaction record.
+  
     this.router.navigate(['/student-detail-form'], {
       queryParams: {
         mode: 'view',

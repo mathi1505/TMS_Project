@@ -57,7 +57,18 @@ export class ReportService {
     ).pipe(tap(file => this.saveFile(file)));
   }
 
-  /** Turns a base64-wrapped file payload back into bytes and triggers a browser download. */
+  
+  exportActivities(studentType: string, tranParticular: string, studentNumber: number | null,
+                    format: ReportDownloadFormat): Observable<ExportFileResponse> {
+    let params = new HttpParams().set('format', format);
+    if (studentType) params = params.set('studentType', studentType);
+    if (tranParticular) params = params.set('tranParticular', tranParticular);
+    if (studentNumber !== null && studentNumber !== undefined) params = params.set('studentNumber', studentNumber);
+    return this.http.get<ExportFileResponse>(`${this.baseUrl}/activities/export`, { params })
+      .pipe(tap(file => this.saveFile(file)));
+  }
+
+
   private saveFile(file: ExportFileResponse): void {
     const binary = atob(file.base64Data);
     const bytes = new Uint8Array(binary.length);

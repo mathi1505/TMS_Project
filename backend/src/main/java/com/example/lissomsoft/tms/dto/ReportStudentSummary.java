@@ -6,10 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-/**
- * Row shown on the Report Online Display master search screen.
- * (Student Name / Type / Number search -> Joining Date, Trainer, Mobile, Email, Status)
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
