@@ -19,14 +19,20 @@ public class AuthService {
     private final JwtService jwtService;
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsernameIgnoreCase(request.username().trim())
+
+        User user = userRepository.findByUserNameIgnoreCase(request.username().trim())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid username or password."));
+
+        if (!"A".equalsIgnoreCase(user.getDelFlg())) {
+            throw ApiException.unauthorized("This account has been deactivated.");
+        }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw ApiException.unauthorized("Invalid username or password.");
         }
 
-        String token = jwtService.generateToken(user.getUsername(), user.getRole());
-        return new LoginResponse(token, user.getUsername(), user.getFullName(), user.getRole());
+
+        String token = jwtService.generateToken(user.getUserId(), user.getUserNo(), user.getUserName(), user.getRole());
+        return new LoginResponse(token, user.getUserId(), user.getUserNo(), user.getUserName(), user.getRole());
     }
 }

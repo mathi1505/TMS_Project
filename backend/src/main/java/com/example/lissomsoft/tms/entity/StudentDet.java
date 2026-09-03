@@ -53,6 +53,10 @@ public class StudentDet {
     @Column(name = "Tran_num", nullable = false)
     private Integer tranNumber;
 
+    @Id
+    @Column(name = "Entry_seq", nullable = false)
+    private Integer entrySeq;
+
     @Column(name = "Tran_particular", length = 30)
     private String tranParticular;
 

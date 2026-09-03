@@ -14,11 +14,12 @@ public interface StudentDetRepository extends JpaRepository<StudentDet, StudentD
 
     List<StudentDet> findByStudentIdIgnoreCaseAndStudentNumber(String studentId, Integer studentNumber);
 
-    Optional<StudentDet> findByStudentIdAndTranDateAndTranIdAndTranNumber(
-            String studentId, LocalDate tranDate, String tranId, Integer tranNumber);
+    Optional<StudentDet> findByStudentIdAndTranDateAndTranIdAndTranNumberAndEntrySeq(
+            String studentId, LocalDate tranDate, String tranId, Integer tranNumber, Integer entrySeq);
 
-    Optional<StudentDet> findByStudentIdAndStudentNumberAndTranDateAndTranIdAndTranNumber(
-            String studentId, Integer studentNumber, LocalDate tranDate, String tranId, Integer tranNumber);
+    Optional<StudentDet> findByStudentIdAndStudentNumberAndTranDateAndTranIdAndTranNumberAndEntrySeq(
+            String studentId, Integer studentNumber, LocalDate tranDate, String tranId, Integer tranNumber,
+            Integer entrySeq);
 
     @org.springframework.data.jpa.repository.Query(
         "select coalesce(max(s.tranNumber), 0) from StudentDet s where s.studentId = :studentId and s.tranId = :tranId")
@@ -28,4 +29,12 @@ public interface StudentDetRepository extends JpaRepository<StudentDet, StudentD
         "select coalesce(max(s.tranNumber), 0) from StudentDet s where s.studentId = :studentId "
             + "and s.studentNumber = :studentNumber and s.tranId = :tranId")
     Integer findMaxTranNumber(String studentId, Integer studentNumber, String tranId);
+
+
+    @org.springframework.data.jpa.repository.Query(
+        "select coalesce(max(s.entrySeq), 0) from StudentDet s where s.studentId = :studentId "
+            + "and s.studentNumber = :studentNumber and s.tranDate = :tranDate "
+            + "and s.tranId = :tranId and s.tranNumber = :tranNumber")
+    Integer findMaxEntrySeq(String studentId, Integer studentNumber, LocalDate tranDate, String tranId,
+                             Integer tranNumber);
 }

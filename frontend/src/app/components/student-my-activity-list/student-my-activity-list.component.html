@@ -1,0 +1,148 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>My Daily Activity</h2>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-primary" (click)="onAddNew()">＋ Add New</button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="banner banner-info">Loading…</div>
+  }
+
+  @if (!loading && notFound) {
+    <div class="banner banner-error">We couldn't find your student record. Please contact your trainer.</div>
+  }
+
+  @if (!loading && header) {
+
+    <div class="card top-line-card">
+      <div class="top-line">
+        <div class="top-line-item"><span class="top-line-label">Student No.</span><span class="mono">{{ header.studentId }}-{{ header.studentNumber }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Name</span><span>{{ header.studentName }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Mode</span><span>{{ studyModeLabel }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Joining Date</span><span class="mono">{{ header.joiningDate }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Trainer</span><span>{{ header.trainerName }}</span></div>
+        <div class="top-line-item"><span class="top-line-label">Mobile</span><span class="mono">{{ header.mobileNo }}</span></div>
+      </div>
+    </div>
+
+    <div class="card search-card">
+      <div class="search-row">
+        <div class="field key-field">
+          <label for="ma-month">Month</label>
+          <select id="ma-month" [(ngModel)]="selectedMonth" (ngModelChange)="onFilterChange()" class="status-select search-input">
+            <option [ngValue]="null">All</option>
+            @for (opt of monthOptions; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field key-field">
+          <label for="ma-year">Year</label>
+          <select id="ma-year" [(ngModel)]="selectedYear" (ngModelChange)="onFilterChange()" class="status-select search-input">
+            <option [ngValue]="null">All</option>
+            @for (y of yearOptions; track y) {
+              <option [ngValue]="y">{{ y }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-card-head">
+        <span class="table-label">Daily Activities</span>
+        <span class="record-count">{{ activities.length }} record(s)</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <colgroup>
+            <col class="col-joining" />
+            <col class="col-joining" />
+            <col class="col-mode" />
+            <col class="col-mode" />
+            <col class="col-type" />
+            <col class="col-name" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Tran Date</th>
+              <th>Value Date</th>
+              <th>Time In</th>
+              <th>Time Out</th>
+              <th>Technology</th>
+              <th>Topic Covered</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of pagedRows; track row.tranId + '::' + row.tranNumber + '::' + row.tranDate + '::' + row.entrySeq) {
+              <tr>
+                <td class="mono">{{ row.tranDate }}</td>
+                <td class="mono">{{ row.valueDate }}</td>
+                <td class="mono">{{ row.timeIn }}</td>
+                <td class="mono">{{ row.timeOut }}</td>
+                <td>{{ row.technology }}</td>
+                <td>{{ row.topicCovered }}</td>
+                <td>{{ row.tranParticular }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon view-btn" (click)="onViewDetails(row)">👁 View details</button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="8" class="empty-cell">No daily activity records found for the selected period.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (activities.length > 0) {
+        <div class="pagination-bar">
+          <span class="pagination-info">Showing {{ rangeStart }}–{{ rangeEnd }} of {{ activities.length }}</span>
+          <app-pagination [currentPage]="currentPage" [totalPages]="totalPages" (pageChange)="goToPage($event)"></app-pagination>
+        </div>
+      }
+    </div>
+
+  }
+
+  @if (selectedRow) {
+    <div class="modal-backdrop" (click)="closeDetails()">
+      <div class="card modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-panel-head">
+          <span class="table-label">Activity Detail</span>
+          <button class="btn-icon" (click)="closeDetails()">✕</button>
+        </div>
+        <div class="modal-panel-body">
+          <div class="detail-grid">
+            <div class="detail-item"><span class="top-line-label">Tran Date</span><span class="mono">{{ selectedRow.tranDate }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Value Date</span><span class="mono">{{ selectedRow.valueDate }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Time In</span><span class="mono">{{ selectedRow.timeIn }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Time Out</span><span class="mono">{{ selectedRow.timeOut }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Technology</span><span>{{ selectedRow.technology }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Status</span><span>{{ selectedRow.tranParticular }}</span></div>
+            <div class="detail-item detail-item-wide"><span class="top-line-label">Narration</span><span>{{ selectedRow.narration }}</span></div>
+            <div class="detail-item detail-item-wide"><span class="top-line-label">Remarks</span><span>{{ selectedRow.remarks }}</span></div>
+          </div>
+        </div>
+        <div class="modal-panel-foot">
+          <button class="btn btn-ghost" (click)="closeDetails()">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</section>

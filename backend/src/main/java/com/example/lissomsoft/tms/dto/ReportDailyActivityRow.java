@@ -15,6 +15,7 @@ public class ReportDailyActivityRow {
 
     private String tranId;
     private Integer tranNumber;
+    private Integer entrySeq;
 
     private LocalDate tranDate;
     private LocalDate valueDate;
@@ -24,7 +25,6 @@ public class ReportDailyActivityRow {
     private String topicCovered;
     private String tranParticular;
 
-    // "View details" extras
     private String courseId;
     private Integer courseDetId;
     private String narration;

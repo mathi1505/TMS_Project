@@ -12,18 +12,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
 import { Paginator } from '../../services/paginator';
 import { ReportDownloadFormat, REPORT_DOWNLOAD_OPTIONS } from '../../models/report.model';
 
-/**
- * Reports Dash Board activity tiles use merged/synthetic status codes
- * (Left + Dropped combined into one tile, "Others" has no tile). This maps
- * those codes back to the raw Tran_particular values stored on each record,
- * and to the label shown in the "Results for" strip.
- */
-const ACTIVITY_BUCKETS: Record<string, { label: string; values: string[] }> = {
-  IN_PROGRESS: { label: 'In Progress', values: ['In Progress'] },
-  COMPLETED: { label: 'Completed', values: ['Completed'] },
-  LEFT_DROPPED: { label: 'Left / Dropped', values: ['Left', 'Dropped'] },
-  SHIFTED: { label: 'Shifted to Main office', values: ['Shifted to Main office'] },
-};
+
 
 @Component({
   selector: 'app-student-detail-list',
@@ -38,10 +27,10 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
   searchParticular: string = '';
   searchNumber: number | null = null;
 
-  readonly particularOptions = TRAN_PARTICULAR_OPTIONS;
+ 
+  particularOptions: string[] = TRAN_PARTICULAR_OPTIONS;
 
-  /** Set only when arriving from a Reports Dash Board activity tile. */
-  private dashboardBucketCode: string | null = null;
+  private dashboardParticular: string | null = null;
 
   allRecords: StudentDetail[] = [];
   tableRecords: StudentDetail[] = [];
@@ -49,8 +38,6 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
 
   readonly paginator = new Paginator<StudentDetail>(() => this.tableRecords);
 
-  // Populated from backend (Config Master: configMaster === 'STUD'),
-  // same source used by the Student Daily Activity form.
   studentTypeOptions: { value: string; label: string }[] = [];
 
   downloadOptions = REPORT_DOWNLOAD_OPTIONS;
@@ -68,24 +55,37 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Arriving from the Reports Dash Board with an activity-status tile clicked.
-    const incomingParticular = this.route.snapshot.queryParamMap.get('tranParticular');
-    if (incomingParticular && ACTIVITY_BUCKETS[incomingParticular]) {
-      this.dashboardBucketCode = incomingParticular;
-    }
+   const incomingParticular =
+  this.route.snapshot.queryParamMap.get('tranParticular');
+
+if (incomingParticular) {
+  this.dashboardParticular = incomingParticular.trim();
+  this.searchParticular = this.dashboardParticular;
+}
 
     this.svc.getAll().subscribe(rows => {
       this.allRecords = rows;
       this.tableRecords = [...rows];
-      if (this.dashboardBucketCode) {
-        this.doSearch();
-      }
+     if (this.dashboardParticular) {
+  this.doSearch();
+}
     });
 
     this.dataSub.add(this.configDetSvc.activeData$.subscribe(rows => {
       this.studentTypeOptions = rows
         .filter(r => r.configMaster === 'STUD' && r.configName.trim() !== 'Employee')
         .map(r => ({ value: this.parseCodePrefix(r.configName), label: r.configName }));
+
+    
+      const live = rows
+        .filter(r => r.configMaster === 'TRAN')
+        .map(r => r.configName);
+
+      this.particularOptions = live.length ? live : TRAN_PARTICULAR_OPTIONS;
+
+      if (this.searchParticular && !this.particularOptions.includes(this.searchParticular)) {
+        this.particularOptions = [...this.particularOptions, this.searchParticular];
+      }
     }));
     this.configDetSvc.getAll().subscribe();
   }
@@ -110,45 +110,70 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
     this.doSearch();
   }
 
-  /** Manual dropdown selection always overrides whatever the dashboard tile passed in. */
-  onParticularChange(): void {
-    this.dashboardBucketCode = null;
-    this.doSearch();
+ onParticularChange(): void {
+  this.dashboardParticular = null;
+  this.doSearch();
+}
+doSearch(): void {
+
+  const particularValue =
+    this.dashboardParticular ?? this.searchParticular.trim();
+
+  if (
+    !this.searchType &&
+    !particularValue &&
+    this.searchNumber === null
+  ) {
+    this.clearSearch();
+    return;
   }
 
-  doSearch(): void {
+  this.showingAll = false;
+  this.paginator.reset();
 
-    const particularValues = this.dashboardBucketCode
-      ? ACTIVITY_BUCKETS[this.dashboardBucketCode].values
-      : (this.searchParticular ? [this.searchParticular] : null);
+  const numberPrefix =
+    this.searchNumber !== null
+      ? String(this.searchNumber)
+      : '';
 
-    if (!this.searchType && !particularValues && this.searchNumber === null) {
-      this.clearSearch();
-      return;
+  this.tableRecords = this.allRecords.filter(r => {
+
+   
+    if (
+      this.searchType &&
+      this.typeOf(r.studentId) !== this.searchType
+    ) {
+      return false;
     }
 
-    this.showingAll = false;
-    this.paginator.reset();
+    if (
+      particularValue &&
+      (r.tranParticular ?? '').trim() !== particularValue
+    ) {
+      return false;
+    }
 
-    const numberPrefix = this.searchNumber !== null ? String(this.searchNumber) : '';
+  
+    if (
+      numberPrefix &&
+      String(r.studentNumber) !== numberPrefix
+    ) {
+      return false;
+    }
 
-    this.tableRecords = this.allRecords.filter(r => {
-      if (this.searchType && this.typeOf(r.studentId) !== this.searchType) return false;
-      if (particularValues && !particularValues.includes((r.tranParticular ?? '').trim())) return false;
-      if (numberPrefix && String(r.studentNumber) !== numberPrefix) return false;
-      return true;
-    });
-  }
+    return true;
+  });
+}
 
-  clearSearch(): void {
-    this.searchType = '';
-    this.searchParticular = '';
-    this.searchNumber = null;
-    this.dashboardBucketCode = null;
-    this.showingAll = true;
-    this.tableRecords = [...this.allRecords];
-    this.paginator.reset();
-  }
+ clearSearch(): void {
+  this.searchType = '';
+  this.searchParticular = '';
+  this.searchNumber = null;
+  this.dashboardParticular = null;
+  this.showingAll = true;
+  this.tableRecords = [...this.allRecords];
+  this.paginator.reset();
+}
 
   onNew(): void {
     this.router.navigate(['/student-detail-form'], { queryParams: { mode: 'new' } });
@@ -160,9 +185,12 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const particularValues = this.dashboardBucketCode
-      ? ACTIVITY_BUCKETS[this.dashboardBucketCode].values
-      : (this.searchParticular ? [this.searchParticular] : []);
+const particularValues =
+  this.dashboardParticular
+    ? [this.dashboardParticular]
+    : this.searchParticular.trim()
+      ? [this.searchParticular.trim()]
+      : [];
 
     this.reportSvc.exportActivities(
       this.searchType, particularValues.join(','), this.searchNumber, this.downloadFormat
@@ -180,7 +208,8 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
         studentNumber: r.studentNumber,
         tranDate: r.tranDate,
         tranId: r.tranId,
-        tranNumber: r.tranNumber
+        tranNumber: r.tranNumber,
+        entrySeq: r.entrySeq
       }
     });
   }
@@ -193,7 +222,8 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
         studentNumber: r.studentNumber,
         tranDate: r.tranDate,
         tranId: r.tranId,
-        tranNumber: r.tranNumber
+        tranNumber: r.tranNumber,
+        entrySeq: r.entrySeq
       }
     });
   }
@@ -215,11 +245,9 @@ export class StudentDetailListComponent implements OnInit, OnDestroy {
     return match ? match.label : '';
   }
 
-  /** What to show in the "Results for ..." strip when filtered by particular/status. */
-  get searchParticularLabel(): string {
-    if (this.dashboardBucketCode) return ACTIVITY_BUCKETS[this.dashboardBucketCode].label;
-    return this.searchParticular;
-  }
+ get searchParticularLabel(): string {
+  return this.dashboardParticular ?? this.searchParticular;
+}
 
   get currentPage(): number { return this.paginator.currentPage; }
   get totalPages(): number { return this.paginator.totalPages; }

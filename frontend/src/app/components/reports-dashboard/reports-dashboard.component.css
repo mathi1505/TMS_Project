@@ -62,6 +62,12 @@
 }
 
 
+.activity-tile-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 220px));
+  justify-content: start;
+}
+
+
 .dash-tile {
   display: flex;
   flex-direction: column;
@@ -120,8 +126,10 @@
 
 @media (max-width: 640px) {
   .tile-grid { grid-template-columns: repeat(2, 1fr); }
+  .activity-tile-grid { justify-content: stretch; }
 }
 
 @media (max-width: 420px) {
   .tile-grid { grid-template-columns: 1fr; }
+  .activity-tile-grid { justify-content: stretch; }
 }

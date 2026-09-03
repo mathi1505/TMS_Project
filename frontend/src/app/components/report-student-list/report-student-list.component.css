@@ -38,14 +38,12 @@
   min-width: 160px;
 }
 
-/* Download control lives in the page toolbar (top-right of the page) here,
-   so it doesn't need the card's top border/padding. */
+
 .top-download-bar {
   padding: 0;
   border-top: none;
 }
 
-/* Name search: typeahead dropdown */
 .name-field {
   position: relative;
 }
@@ -96,10 +94,7 @@
   flex-shrink: 0;
 }
 
-/* Table: allow horizontal scroll instead of squeezing/ellipsis-truncating columns.
-   The shared .data-table rule uses table-layout:fixed + width:100%, which forces
-   columns to shrink to the container width. Override just for this report table
-   so it can grow wider than the card and scroll sideways within .table-wrap. */
+
 .table-card .table-wrap {
   overflow-x: auto;
   overflow-y: auto;
@@ -120,3 +115,7 @@
 .table-card .data-table .col-email    { min-width: 200px; }
 .table-card .data-table .col-status   { min-width: 130px; }
 .table-card .data-table .col-actions  { min-width: 220px; }
+
+.bottom-toolbar {
+  justify-content: flex-end;
+}

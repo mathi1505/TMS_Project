@@ -107,7 +107,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber + row.tranDate + row.tranId + row.tranNumber) {
+          @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber + row.tranDate + row.tranId + row.tranNumber + '::' + row.entrySeq) {
             <tr>
               <td class="col-sid"><span class="id-chip mono">{{ combinedStudentId(row) }}</span></td>
               <td class="col-sname">{{ row.studentName }}</td>

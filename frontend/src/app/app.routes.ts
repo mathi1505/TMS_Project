@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { studentGuard, notStudentGuard } from './guards/student.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -26,6 +27,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/config-master-form/config-master-form.component').then(m => m.ConfigMasterFormComponent),
     title: 'Configuration Master – Form'
+  },
+
+  {
+    path: 'user-master',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./components/user-master-list/user-master-list.component').then(m => m.UserMasterListComponent),
+    title: 'User Maintenance'
+  },
+
+  {
+    path: 'user-master-form',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./components/user-master-form/user-master-form.component').then(m => m.UserMasterFormComponent),
+    title: 'User Maintenance – Form'
   },
 
   {
@@ -125,8 +142,24 @@ export const routes: Routes = [
   },
 
   {
+    path: 'my-activity',
+    canActivate: [authGuard, studentGuard],
+    loadComponent: () =>
+      import('./components/student-my-activity-list/student-my-activity-list.component').then(m => m.StudentMyActivityListComponent),
+    title: 'My Daily Activity'
+  },
+
+  {
+    path: 'my-activity-form',
+    canActivate: [authGuard, studentGuard],
+    loadComponent: () =>
+      import('./components/student-my-activity-form/student-my-activity-form.component').then(m => m.StudentMyActivityFormComponent),
+    title: 'My Daily Activity – New Entry'
+  },
+
+  {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, notStudentGuard],
     loadComponent: () =>
       import('./components/reports-dashboard/reports-dashboard.component').then(m => m.ReportsDashboardComponent),
     title: 'Reports Dash Board'
@@ -138,6 +171,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/report-student-list/report-student-list.component').then(m => m.ReportStudentListComponent),
     title: 'Student Information Report'
+  },
+
+  {
+    path: 'report-activity',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/report-student-activity/report-student-activity.component').then(m => m.ReportStudentActivityComponent),
+    title: 'Student Activity Dashboard Report'
   },
 
   {

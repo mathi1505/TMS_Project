@@ -20,12 +20,144 @@
     <div class="banner banner-info">Loading…</div>
   }
 
-  @if (!loading && notFound) {
+  @if (!loading && listMode) {
+
+    <div class="card search-card">
+      <div class="search-row">
+
+        <div class="field key-field">
+          <label for="da-type">Student Type</label>
+          <select
+            id="da-type"
+            [(ngModel)]="searchType"
+            class="status-select search-input"
+            (ngModelChange)="onListFilterChange()"
+          >
+            <option value="">All</option>
+            @for (opt of studentTypeOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field key-field">
+          <label for="da-particular">Tran Particular</label>
+          <select
+            id="da-particular"
+            [(ngModel)]="searchParticular"
+            class="status-select search-input"
+            (ngModelChange)="onListFilterChange()"
+          >
+            <option value="">All</option>
+            @for (opt of particularOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field key-field">
+          <label for="da-num">Student Number</label>
+          <input
+            id="da-num" type="number" min="1"
+            [(ngModel)]="searchNumber"
+            (ngModelChange)="onListFilterChange()"
+            placeholder="e.g. 1"
+            class="mono search-input" autocomplete="off"
+          />
+        </div>
+
+        <div class="field key-field day-toggle-field">
+          <label for="da-today">Today Only</label>
+          <label class="day-toggle">
+            <input
+              id="da-today" type="checkbox"
+              [(ngModel)]="currentDayOnly"
+              (ngModelChange)="onListFilterChange()"
+            />
+            <span>Current day activity</span>
+          </label>
+        </div>
+
+        <button class="btn btn-ghost" (click)="clearListSearch()">Clear</button>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-card-head">
+        <span class="table-label">Daily Activities {{ currentDayOnly ? '(Today)' : '(All)' }}</span>
+        <span class="record-count">{{ listRows.length }} record(s)</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <colgroup>
+            <col class="col-id" />
+            <col class="col-name" />
+            <col class="col-type" />
+            <col class="col-trainer" />
+            <col class="col-joining" />
+            <col class="col-tech" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Trainer</th>
+              <th>Tran Date</th>
+              <th>Technology</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of pagedListRows; track row.tranId + '::' + row.tranNumber + '::' + row.studentId + '::' + row.studentNumber) {
+              <tr>
+                <td class="mono">{{ row.studentId }}-{{ row.studentNumber }}</td>
+                <td>{{ row.studentName }}</td>
+                <td>{{ row.studentType }}</td>
+                <td>{{ row.trainerName }}</td>
+                <td class="mono">{{ row.tranDate }}</td>
+                <td>{{ row.technology }}</td>
+                <td>{{ row.tranParticular }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon view-btn" (click)="onViewListDetails(row)">👁 View details</button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="8" class="empty-cell">No daily activity records found for the given search criteria.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (listRows.length > 0) {
+        <div class="pagination-bar">
+          <span class="pagination-info">Showing {{ listRangeStart }}–{{ listRangeEnd }} of {{ listRows.length }}</span>
+          <app-pagination [currentPage]="listCurrentPage" [totalPages]="listTotalPages" (pageChange)="goToListPage($event)"></app-pagination>
+        </div>
+      }
+    </div>
+
+    <div class="page-toolbar bottom-toolbar">
+      <button class="btn btn-ghost" (click)="onBack()">← Back</button>
+    </div>
+  }
+
+ 
+  @if (!loading && !listMode && notFound) {
     <div class="banner banner-error">No record found for {{ studentId }}-{{ studentNumber }}.</div>
   }
 
-  @if (!loading && header) {
-   
+  @if (!loading && !listMode && header) {
+
     <div class="card top-line-card">
       <div class="top-line">
         <div class="top-line-item"><span class="top-line-label">Student No.</span><span class="mono">{{ header.studentId }}-{{ header.studentNumber }}</span></div>
@@ -37,7 +169,7 @@
       </div>
     </div>
 
-  
+
     <div class="card search-card">
       <div class="search-row">
         <div class="field key-field">
@@ -92,7 +224,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of pagedRows; track row.tranId + '::' + row.tranNumber + '::' + row.tranDate) {
+            @for (row of pagedRows; track row.tranId + '::' + row.tranNumber + '::' + row.tranDate + '::' + row.entrySeq) {
               <tr>
                 <td class="mono">{{ row.tranDate }}</td>
                 <td class="mono">{{ row.valueDate }}</td>
@@ -125,9 +257,38 @@
       }
     </div>
 
-  
+
     <div class="page-toolbar bottom-toolbar">
       <button class="btn btn-ghost" (click)="onBack()">← Back to Search</button>
+    </div>
+  }
+
+  <!-- List-mode "View details" - same idea, one row's full detail. -->
+  @if (selectedListRow) {
+    <div class="modal-backdrop" (click)="closeListDetails()">
+      <div class="card modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-panel-head">
+          <span class="table-label">Activity Detail</span>
+          <button class="btn-icon" (click)="closeListDetails()">✕</button>
+        </div>
+        <div class="modal-panel-body">
+          <div class="detail-grid">
+            <div class="detail-item"><span class="top-line-label">Student</span><span class="mono">{{ selectedListRow.studentId }}-{{ selectedListRow.studentNumber }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Name</span><span>{{ selectedListRow.studentName }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Tran Date</span><span class="mono">{{ selectedListRow.tranDate }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Time In</span><span class="mono">{{ selectedListRow.timeIn }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Time Out</span><span class="mono">{{ selectedListRow.timeOut }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Technology</span><span>{{ selectedListRow.technology }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Status</span><span>{{ selectedListRow.tranParticular }}</span></div>
+            <div class="detail-item"><span class="top-line-label">Trainer</span><span>{{ selectedListRow.trainerName }}</span></div>
+            <div class="detail-item detail-item-wide"><span class="top-line-label">Narration</span><span>{{ selectedListRow.narration }}</span></div>
+            <div class="detail-item detail-item-wide"><span class="top-line-label">Remarks</span><span>{{ selectedListRow.remarks }}</span></div>
+          </div>
+        </div>
+        <div class="modal-panel-foot">
+          <button class="btn btn-ghost" (click)="closeListDetails()">Close</button>
+        </div>
+      </div>
     </div>
   }
 

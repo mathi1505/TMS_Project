@@ -12,11 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,125 +25,117 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private static final String STUD_CONFIG_MASTER = "STUD";
-
-    private record ActivityBucket(String code, String label, Set<String> values) {
-        boolean matches(String tranParticular) {
-            if (tranParticular == null) return false;
-            String trimmed = tranParticular.trim();
-            return values.stream().anyMatch(v -> v.equalsIgnoreCase(trimmed));
-        }
-    }
-
-
-    private static final List<ActivityBucket> ACTIVITY_BUCKETS = List.of(
-            new ActivityBucket("IN_PROGRESS", "In Progress", Set.of("In Progress")),
-            new ActivityBucket("COMPLETED", "Completed", Set.of("Completed")),
-            new ActivityBucket("LEFT_DROPPED", "Left / Dropped", Set.of("Left", "Dropped")),
-            new ActivityBucket("SHIFTED", "Shifted to Main office", Set.of("Shifted to Main office"))
-    );
-
     private final StudentMasterRepository studentMasterRepository;
     private final StudentDetRepository studentDetRepository;
     private final ConfigDetRepository configDetRepository;
 
     public DashboardSummaryResponse summary() {
 
-        List<StudentMaster> activeStudents = studentMasterRepository.findAll().stream()
-                .filter(s -> "A".equalsIgnoreCase(s.getDelFlag()))
-                .collect(Collectors.toList());
+        List<StudentMaster> activeStudents =
+                studentMasterRepository.findAll().stream()
+                        .filter(s -> "A".equalsIgnoreCase(s.getDelFlag()))
+                        .collect(Collectors.toList());
+
+        List<StudentDet> activeActivity =
+                studentDetRepository.findAll().stream()
+                        .filter(d -> "A".equalsIgnoreCase(d.getDelFlag()))
+                        .collect(Collectors.toList());
+
+        List<DashboardCountItem> activityTiles = studentActivityCounts(activeActivity);
 
         return new DashboardSummaryResponse(
                 activeStudents.size(),
                 studentMasterCounts(activeStudents),
-                distinctActivityStudentCount(),
-                studentActivityCounts()
+                sumOfTileCounts(activityTiles),
+                activityTiles
         );
     }
 
 
-    private List<DashboardCountItem> studentMasterCounts(List<StudentMaster> activeStudents) {
+    private List<DashboardCountItem> studentMasterCounts(
+            List<StudentMaster> activeStudents) {
 
-        List<ConfigDet> studentTypes = configDetRepository.findByConfigMaster(STUD_CONFIG_MASTER).stream()
-                .filter(c -> "A".equalsIgnoreCase(c.getDelFlag()))
-                .filter(c -> c.getConfigName() != null && !"Employee".equalsIgnoreCase(c.getConfigName().trim()))
-                .collect(Collectors.toList());
-
-        Map<String, Long> countByCode = activeStudents.stream()
+        Map<String, Long> counts = activeStudents.stream()
                 .map(s -> typeCodeOf(s.getStudentId()))
-                .collect(Collectors.groupingBy(code -> code, Collectors.counting()));
+                .filter(type -> type != null && !type.isEmpty())
+                .collect(Collectors.groupingBy(
+                        type -> type,
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
 
-        List<DashboardCountItem> items = new ArrayList<>();
-        for (ConfigDet type : studentTypes) {
-            String code = codePrefixOf(type.getConfigName());
-            long count = countByCode.getOrDefault(code, 0L);
-            items.add(new DashboardCountItem(code, type.getConfigName(), count));
-        }
-        return items;
+        return counts.entrySet().stream()
+                .map(entry -> new DashboardCountItem(
+                        entry.getKey(),
+                        entry.getKey(),
+                        entry.getValue()
+                ))
+                .collect(Collectors.toList());
     }
 
-    private String codePrefixOf(String configName) {
-        if (configName == null) return "";
-        String name = configName.trim();
-        int dash = name.indexOf('-');
-        return (dash > 0 ? name.substring(0, dash) : name).trim().toUpperCase(Locale.ROOT);
-    }
 
     private String typeCodeOf(String studentId) {
-        if (studentId == null || !studentId.toUpperCase(Locale.ROOT).startsWith("LS")) return "";
+        if (studentId == null || !studentId.toUpperCase().startsWith("LS")) return "";
         String rest = studentId.substring(2);
         int dashIdx = rest.indexOf('-');
-        return (dashIdx > 0 ? rest.substring(0, dashIdx) : rest).toUpperCase(Locale.ROOT);
+        return dashIdx > 0 ? rest.substring(0, dashIdx) : rest;
     }
 
+    private List<DashboardCountItem> studentActivityCounts(List<StudentDet> activeActivity) {
 
-    private long distinctActivityStudentCount() {
-        return latestActivityByStudent().size();
-    }
+        Map<String, Set<String>> studentsByParticular = new LinkedHashMap<>();
 
-    private List<DashboardCountItem> studentActivityCounts() {
+        for (StudentDet d : activeActivity) {
+            if (d.getTranParticular() == null) continue;
+            String particular = d.getTranParticular().trim();
+            if (particular.isEmpty()) continue;
 
-        Map<String, Long> countByBucketCode = new LinkedHashMap<>();
-        for (ActivityBucket bucket : ACTIVITY_BUCKETS) {
-            countByBucketCode.put(bucket.code(), 0L);
+            String key = d.getStudentId() + "::" + d.getStudentNumber();
+            studentsByParticular
+                    .computeIfAbsent(particular, p -> new LinkedHashSet<>())
+                    .add(key);
         }
 
-        for (StudentDet d : latestActivityByStudent().values()) {
-            for (ActivityBucket bucket : ACTIVITY_BUCKETS) {
-                if (bucket.matches(d.getTranParticular())) {
-                    countByBucketCode.merge(bucket.code(), 1L, Long::sum);
-                    break; // each student's latest activity belongs to exactly one tile
-                }
-            }
-        }
+        Map<String, Long> countByParticular = studentsByParticular.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> (long) e.getValue().size(),
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                ));
 
-        List<DashboardCountItem> items = new ArrayList<>();
-        for (ActivityBucket bucket : ACTIVITY_BUCKETS) {
-            items.add(new DashboardCountItem(bucket.code(), bucket.label(), countByBucketCode.get(bucket.code())));
-        }
-        return items;
-    }
-
-
-    private Map<String, StudentDet> latestActivityByStudent() {
-
-        List<StudentDet> active = studentDetRepository.findAll().stream()
-                .filter(d -> "A".equalsIgnoreCase(d.getDelFlag()))
+        List<ConfigDet> tranConfig = configDetRepository.findByConfigMaster("TRAN").stream()
+                .filter(c -> "A".equalsIgnoreCase(c.getDelFlag()))
+                .filter(c -> c.getConfigName() != null && !c.getConfigName().trim().isEmpty())
+                .sorted(Comparator.comparing(ConfigDet::getConfigId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
 
-        Map<String, StudentDet> latest = new LinkedHashMap<>();
-        Comparator<StudentDet> byRecency = Comparator
-                .comparing(StudentDet::getTranDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder()));
+        List<DashboardCountItem> tiles = tranConfig.stream()
+                .map(c -> {
+                    String particular = c.getConfigName().trim();
+                    long count = countByParticular.getOrDefault(particular, 0L);
+                    return new DashboardCountItem(particular, particular, count);
+                })
+                .collect(Collectors.toList());
 
-        for (StudentDet d : active) {
-            String key = d.getStudentId() + "::" + d.getStudentNumber();
-            StudentDet current = latest.get(key);
-            if (current == null || byRecency.compare(d, current) > 0) {
-                latest.put(key, d);
+
+        Set<String> configured = tranConfig.stream()
+                .map(c -> c.getConfigName().trim())
+                .collect(Collectors.toSet());
+
+        countByParticular.forEach((particular, count) -> {
+            if (!configured.contains(particular)) {
+                tiles.add(new DashboardCountItem(particular, particular, count));
             }
-        }
-        return latest;
+        });
+
+        return tiles;
+    }
+
+
+    private long sumOfTileCounts(List<DashboardCountItem> activityTiles) {
+        return activityTiles.stream()
+                .mapToLong(DashboardCountItem::getCount)
+                .sum();
     }
 }
-

@@ -25,6 +25,6 @@ public class AuthController {
     @GetMapping("/me")
     public CurrentUser me(Authentication authentication) {
         AuthenticatedPrincipal principal = (AuthenticatedPrincipal) authentication.getPrincipal();
-        return new CurrentUser(principal.username(), principal.role());
+        return new CurrentUser(principal.userId(), principal.userNo(), principal.userName(), principal.role());
     }
 }

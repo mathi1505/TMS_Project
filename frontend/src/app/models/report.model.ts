@@ -10,6 +10,22 @@ export interface ReportStudentSummary {
   status: string;
 }
 
+export interface ReportStudentActivitySummary {
+  studentId: string;
+  studentNumber: number;
+  studentName: string;
+  studentType: string;
+  trainerName: string;
+  mobileNo: number;
+  tranDate: string;
+  technology: string;
+  tranId: string;
+  tranNumber: number;
+  entrySeq: number;
+  tranParticular: string;
+  narration: string;
+}
+
 export interface ReportDailyActivityHeader {
   studentId: string;
   studentNumber: number;
@@ -23,6 +39,7 @@ export interface ReportDailyActivityHeader {
 export interface ReportDailyActivityRow {
   tranId: string;
   tranNumber: number;
+  entrySeq: number;
   tranDate: string;
   valueDate: string;
   timeIn: string;
@@ -39,6 +56,25 @@ export interface ReportDailyActivityRow {
 export interface ReportDailyActivityResponse {
   header: ReportDailyActivityHeader;
   activities: ReportDailyActivityRow[];
+}
+
+
+export interface ReportDailyActivityListRow {
+  studentId: string;
+  studentNumber: number;
+  studentName: string;
+  studentType: string;
+  trainerName: string;
+  mobileNo: number;
+  tranDate: string;
+  technology: string;
+  tranParticular: string;
+  narration: string;
+  timeIn: string;
+  timeOut: string;
+  remarks: string;
+  tranId: string;
+  tranNumber: number;
 }
 
 export interface ExportFileResponse {

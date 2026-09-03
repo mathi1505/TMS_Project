@@ -230,7 +230,7 @@ export class TransactionDetailFormComponent implements OnInit, OnDestroy {
   );
 
   if (student) {
-    // Valid student reference no
+  
     this.showStudentName = true;
 
     this.form.patchValue({
@@ -238,7 +238,7 @@ export class TransactionDetailFormComponent implements OnInit, OnDestroy {
     });
 
   } else {
-    // Not a valid student reference no
+  
     this.showStudentName = false;
 
     this.form.patchValue({

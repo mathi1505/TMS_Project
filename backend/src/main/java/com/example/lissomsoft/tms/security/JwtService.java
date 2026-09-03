@@ -31,11 +31,13 @@ public class JwtService {
         this.expirationMinutes = expirationMinutes;
     }
 
-    public String generateToken(String username, Role role) {
+    public String generateToken(String userId, Integer userNo, String userName, String role) {
         try {
             Map<String, Object> claims = new LinkedHashMap<>();
-            claims.put("sub", username);
-            claims.put("role", role.name());
+            claims.put("sub", userId);
+            claims.put("no", userNo);
+            claims.put("name", userName);
+            claims.put("role", role);
             claims.put("iat", Instant.now().getEpochSecond());
             claims.put("exp", Instant.now().plusSeconds(expirationMinutes * 60).getEpochSecond());
 
@@ -68,9 +70,11 @@ public class JwtService {
                 return java.util.Optional.empty();
             }
 
-            String username = (String) claims.get("sub");
-            Role role = Role.valueOf((String) claims.get("role"));
-            return java.util.Optional.of(new ParsedToken(username, role));
+            String userId = (String) claims.get("sub");
+            Integer userNo = claims.get("no") == null ? null : ((Number) claims.get("no")).intValue();
+            String userName = (String) claims.get("name");
+            String role = (String) claims.get("role");
+            return java.util.Optional.of(new ParsedToken(userId, userNo, userName, role));
         } catch (Exception e) {
             return java.util.Optional.empty();
         }
@@ -82,6 +86,6 @@ public class JwtService {
         return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
     }
 
-    public record ParsedToken(String username, Role role) {
+    public record ParsedToken(String userId, Integer userNo, String userName, String role) {
     }
 }

@@ -49,7 +49,6 @@ export class StudentMasterListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
 
-    // Arriving from the Reports Dash Board with a student-type tile clicked.
     const incomingType = this.route.snapshot.queryParamMap.get('studentType');
     if (incomingType) {
       this.searchType = incomingType;

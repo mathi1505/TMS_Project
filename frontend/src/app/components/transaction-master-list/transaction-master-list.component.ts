@@ -29,7 +29,7 @@ export class TransactionMasterListComponent implements OnInit, OnDestroy {
   tableRecords: TransactionMaster[] = [];
   showingAll = true;
 
-  // Populated from Configuration Master (TRXN / EXP / INC categories).
+  
   trxnIdOptions: TrxnIdOption[] = [];
 
   readonly paginator = new Paginator<TransactionMaster>(() => this.tableRecords);

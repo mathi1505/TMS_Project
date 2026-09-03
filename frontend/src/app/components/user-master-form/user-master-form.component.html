@@ -1,0 +1,243 @@
+<section class="screen form-screen">
+
+  <!-- Page header -->
+  <div class="form-page-header">
+    <div class="form-page-title-group">
+      <h2>User Maintenance</h2>
+      @if (mode !== 'new' && combinedId) {
+        <span class="key-badge mono" title="User Key">{{ combinedId }}</span>
+      }
+    </div>
+    <span class="mode-pill"
+      [class.mode-new]="mode === 'new'"
+      [class.mode-edit]="mode === 'modify'"
+      [class.mode-view]="mode === 'view'"
+    >{{ modeLabel }}</span>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card form-card">
+    <form [formGroup]="form" class="record-grid" autocomplete="off">
+
+      <!-- Role -->
+      <div class="field key-field">
+        <label for="f-role">Role <span class="req">*</span></label>
+        @if (mode === 'new') {
+          <select id="f-role" formControlName="role" class="status-select">
+            @for (opt of roleOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input
+            id="f-role" type="text"
+            [value]="form.get('role')?.value"
+            disabled readonly class="mono"
+          />
+        }
+      </div>
+
+      <!-- User ID (auto-generated / linked to Student Master) -->
+      <div class="field key-field">
+        <label for="f-id">
+          User ID
+          <span class="key-badge" title="Auto-generated">AUTO</span>
+        </label>
+        @if (mode === 'new') {
+          <input
+            id="f-id" type="text"
+            [value]="idPreview"
+            disabled readonly class="mono"
+          />
+          <small class="field-hint">
+            @if (isStudentRole) { Must match an existing Student Master record. }
+            @else { Running ID, auto-assigned on Save. }
+          </small>
+        } @else {
+          <input
+            id="f-id" type="text"
+            [value]="combinedId"
+            disabled readonly class="mono"
+          />
+        }
+      </div>
+
+      <!-- Student ID / Name / No. (only when role = Student) -->
+      @if (isStudentRole) {
+        <div class="field">
+          <label for="f-sid">Student ID <span class="req">*</span></label>
+          @if (mode === 'new') {
+            <select
+              id="f-sid"
+              formControlName="studentId"
+              class="status-select mono"
+              (change)="onStudentIdChange()"
+            >
+              <option value="" disabled>Select Student ID</option>
+              @for (opt of studentIdOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <small class="field-hint">
+              @if (studentIdLocked) { Auto-filled from the selected student. Clear Student Name to change it. }
+              @else { Configured under Config Master (STUD). }
+            </small>
+            @if (form.get('studentId')?.errors?.['required'] && form.get('studentId')?.touched) {
+              <small class="field-error">Student ID is required.</small>
+            }
+          } @else {
+            <input
+              id="f-sid" type="text"
+              [value]="form.get('studentId')?.value"
+              disabled readonly class="mono"
+            />
+          }
+        </div>
+
+        <div class="field typeahead-field">
+          <label for="f-sname">Student Name <span class="req">*</span></label>
+          @if (mode === 'new') {
+            <input
+              id="f-sname" type="text"
+              formControlName="studentName"
+              autocomplete="off"
+              placeholder="Type to search Student Master…"
+              (input)="onStudentNameInput(form.get('studentName')?.value)"
+              (focus)="onStudentNameFocus()"
+              (blur)="onStudentNameBlur()"
+            />
+            @if (showStudentSuggestions) {
+              <ul class="typeahead-menu">
+                @for (s of studentSuggestions; track s.studentId + '-' + s.studentNumber) {
+                  <li (mousedown)="selectStudentSuggestion(s)">
+                    <span class="typeahead-name">{{ s.studentName }}</span>
+                    <span class="typeahead-meta mono">{{ s.studentId }}-{{ s.studentNumber }}</span>
+                  </li>
+                }
+              </ul>
+            }
+            @if (studentNameSearching) {
+              <small class="field-hint">Searching Student Master…</small>
+            } @else if (form.get('studentName')?.errors?.['required'] && form.get('studentName')?.touched) {
+              <small class="field-error">Pick a student from the suggestions.</small>
+            } @else {
+              <small class="field-hint">Click a match to auto-fill Student No.</small>
+            }
+          } @else {
+            <input
+              id="f-sname" type="text"
+              [value]="form.get('studentName')?.value"
+              disabled readonly
+            />
+          }
+        </div>
+
+        <div class="field">
+          <label for="f-sno">Student No.</label>
+          <input
+            id="f-sno" type="text"
+            [value]="form.get('studentNo')?.value ?? ''"
+            disabled readonly class="mono"
+            placeholder="Auto-filled"
+          />
+          @if (mode === 'new' && form.get('studentNo')?.errors?.['required'] && form.get('studentNo')?.touched) {
+            <small class="field-error">Select a Student Name to fill this in.</small>
+          }
+        </div>
+      }
+
+      <!-- User Name -->
+      <div class="field field-wide">
+        <label for="f-name">User Name <span class="req">*</span></label>
+        <input
+          id="f-name" type="text"
+          formControlName="userName"
+          maxlength="25"
+          placeholder="e.g. Arjun Kumar"
+        />
+        @if (form.get('userName')?.errors?.['required'] && form.get('userName')?.touched) {
+          <small class="field-error">User Name is required.</small>
+        }
+        @if (form.get('userName')?.errors?.['maxlength'] && form.get('userName')?.touched) {
+          <small class="field-error">Maximum 25 characters.</small>
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="field field-wide">
+        <label for="f-pwd">
+          Password
+          @if (mode === 'new') { <span class="req">*</span> }
+        </label>
+        @if (mode !== 'view') {
+          <input
+            id="f-pwd" type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            placeholder="{{ mode === 'new' ? 'Enter password' : 'Leave blank to keep current password' }}"
+          />
+          @if (form.get('password')?.errors?.['required'] && form.get('password')?.touched) {
+            <small class="field-error">Password is required.</small>
+          }
+          @if (form.get('password')?.errors?.['minlength'] && form.get('password')?.touched) {
+            <small class="field-error">Minimum 4 characters.</small>
+          }
+          @if (mode === 'modify') {
+            <small class="field-hint">Leave blank to keep the existing password.</small>
+          }
+        } @else {
+          <input id="f-pwd" type="text" value="••••••••" disabled readonly />
+        }
+      </div>
+
+      <!-- Del Flag / Status -->
+      <div class="field">
+        <label for="f-del">Status <span class="req">*</span></label>
+        @if (mode === 'modify') {
+          <select id="f-del" formControlName="delFlag" class="status-select">
+            @for (opt of delFlagOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        } @else {
+          <input
+            id="f-del" type="text"
+            [value]="form.get('delFlag')?.value === 'A' ? 'Active' : 'D – De-Active'"
+            disabled readonly
+          />
+        }
+      </div>
+
+      <!-- Created By / Date (read-only, populated by the server) -->
+      @if (mode !== 'new' && current) {
+        <div class="field">
+          <label for="f-cb">Created By</label>
+          <input id="f-cb" type="text" [value]="current.createdBy || '—'" disabled readonly />
+        </div>
+        <div class="field">
+          <label for="f-cd">Created Date</label>
+          <input id="f-cd" type="text" [value]="current.createdDate || '—'" disabled readonly />
+        </div>
+      }
+
+    </form>
+
+    <!-- ── Action footer ── -->
+    <div class="form-footer">
+      <button class="btn btn-ghost" (click)="goBack()">← Back</button>
+      @if (mode !== 'view') {
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save' }}
+        </button>
+      }
+    </div>
+  </div>
+
+</section>

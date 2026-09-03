@@ -78,17 +78,6 @@
   white-space: nowrap;
 }
 
-/* .type-int {
-  background: #ede9fe;
-  color: #6d28d9;
-  border: 1px solid #c4b5fd;
-}
-
-.type-tri {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fcd34d;
-} */
 
 @media (max-width: 900px) {
   .data-table { table-layout: auto; }

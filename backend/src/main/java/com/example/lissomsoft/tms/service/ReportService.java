@@ -2,8 +2,10 @@ package com.example.lissomsoft.tms.service;
 
 import com.example.lissomsoft.tms.dto.ExportFileResponse;
 import com.example.lissomsoft.tms.dto.ReportDailyActivityHeader;
+import com.example.lissomsoft.tms.dto.ReportDailyActivityListRow;
 import com.example.lissomsoft.tms.dto.ReportDailyActivityResponse;
 import com.example.lissomsoft.tms.dto.ReportDailyActivityRow;
+import com.example.lissomsoft.tms.dto.ReportStudentActivitySummary;
 import com.example.lissomsoft.tms.dto.ReportStudentSummary;
 import com.example.lissomsoft.tms.entity.StudentDet;
 import com.example.lissomsoft.tms.entity.StudentMaster;
@@ -35,8 +37,10 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -158,7 +162,8 @@ public class ReportService {
                 .filter(d -> "A".equalsIgnoreCase(d.getDelFlag()))
                 .filter(d -> matchesMonthYear(d.getTranDate(), month, year))
                 .sorted(Comparator.comparing(StudentDet::getTranDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder())))
+                        .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(StudentDet::getEntrySeq, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
     }
 
@@ -173,6 +178,7 @@ public class ReportService {
         return new ReportDailyActivityRow(
                 d.getTranId(),
                 d.getTranNumber(),
+                d.getEntrySeq(),
                 d.getTranDate(),
                 d.getBackValueDate(),
                 d.getAttendInTime(),
@@ -184,6 +190,110 @@ public class ReportService {
                 d.getCourseDetId(),
                 d.getNarration(),
                 d.getRemarks()
+        );
+    }
+
+
+
+    public List<ReportStudentActivitySummary> searchActivities(
+            String studentType, String tranParticular, Integer studentNumber, boolean currentDayOnly) {
+
+        return latestActivityByStudentForReport(studentType, tranParticular, studentNumber, currentDayOnly)
+                .values().stream()
+                .map(this::toActivitySummary)
+                .sorted(Comparator.comparing(ReportStudentActivitySummary::getStudentName,
+                        Comparator.nullsLast(String::compareToIgnoreCase)))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, StudentDet> latestActivityByStudentForReport(
+            String studentType, String tranParticular, Integer studentNumber, boolean currentDayOnly) {
+
+        List<StudentDet> filtered = filterStudentDetsForList(studentType, tranParticular, studentNumber).stream()
+                .filter(d -> !currentDayOnly || LocalDate.now().equals(d.getTranDate()))
+                .collect(Collectors.toList());
+
+        Comparator<StudentDet> byRecency = Comparator
+                .comparing(StudentDet::getTranDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(StudentDet::getEntrySeq, Comparator.nullsLast(Comparator.naturalOrder()));
+
+
+        Map<String, StudentDet> latest = new LinkedHashMap<>();
+        for (StudentDet d : filtered) {
+            String particularKey = d.getTranParticular() == null ? "" : d.getTranParticular().trim();
+            String key = d.getStudentId() + "::" + d.getStudentNumber() + "::" + particularKey;
+            StudentDet current = latest.get(key);
+            if (current == null || byRecency.compare(d, current) > 0) {
+                latest.put(key, d);
+            }
+        }
+
+        return latest;
+    }
+
+    private ReportStudentActivitySummary toActivitySummary(StudentDet d) {
+
+        StudentMaster master = studentMasterRepository
+                .findByStudentIdAndStudentNumber(d.getStudentId(), d.getStudentNumber())
+                .orElse(null);
+
+        String trainerName = master != null ? resolveTrainerName(master.getAssignedStaff()) : "";
+        Long mobileNo = master != null ? master.getMobileNo() : null;
+
+        return new ReportStudentActivitySummary(
+                d.getStudentId(),
+                d.getStudentNumber(),
+                d.getStudentName(),
+                typeCodeOf(d.getStudentId()),
+                trainerName,
+                mobileNo,
+                d.getTranDate(),
+                d.getTechnology(),
+                d.getTranId(),
+                d.getTranNumber(),
+                d.getEntrySeq(),
+                d.getTranParticular(),
+                d.getNarration()
+        );
+    }
+
+
+
+    public List<ReportDailyActivityListRow> searchActivityRows(
+            String studentType, String tranParticular, Integer studentNumber, boolean currentDayOnly) {
+
+        return filterStudentDetsForList(studentType, tranParticular, studentNumber).stream()
+                .filter(d -> !currentDayOnly || LocalDate.now().equals(d.getTranDate()))
+                .map(this::toListRow)
+                .collect(Collectors.toList());
+    }
+
+    private ReportDailyActivityListRow toListRow(StudentDet d) {
+
+        StudentMaster master = studentMasterRepository
+                .findByStudentIdAndStudentNumber(d.getStudentId(), d.getStudentNumber())
+                .orElse(null);
+
+        String trainerName = master != null ? resolveTrainerName(master.getAssignedStaff()) : "";
+        Long mobileNo = master != null ? master.getMobileNo() : null;
+
+        return new ReportDailyActivityListRow(
+                d.getStudentId(),
+                d.getStudentNumber(),
+                d.getStudentName(),
+                typeCodeOf(d.getStudentId()),
+                trainerName,
+                mobileNo,
+                d.getTranDate(),
+                d.getTechnology(),
+                d.getTranParticular(),
+                d.getNarration(),
+                d.getAttendInTime(),
+                d.getAttendOutTime(),
+                d.getRemarks(),
+                d.getTranId(),
+                d.getTranNumber()
         );
     }
 
@@ -327,11 +437,7 @@ public class ReportService {
         throw ApiException.badRequest("Invalid download option. Choose either Excel or PDF.");
     }
 
-    /**
-     * Export for the Student Daily Activity list screen (all students), used both
-     * for the page's own filters and for a Reports Dash Board activity tile click
-     * (which passes one or more raw Tran_particular values, comma-separated).
-     */
+
     public ExportFileResponse exportActivities(String studentType, String tranParticular, Integer studentNumber, String format) {
 
         List<StudentDet> rows = filterStudentDetsForList(studentType, tranParticular, studentNumber);
@@ -370,7 +476,8 @@ public class ReportService {
                         || particularFilter.stream().anyMatch(v -> v.equalsIgnoreCase(nvl(d.getTranParticular()).trim())))
                 .filter(d -> studentNumber == null || studentNumber.equals(d.getStudentNumber()))
                 .sorted(Comparator.comparing(StudentDet::getTranDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder())))
+                        .thenComparing(StudentDet::getTranNumber, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(StudentDet::getEntrySeq, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
     }
 
@@ -421,7 +528,7 @@ public class ReportService {
 
             setColumnWidths(sheet, DAILY_ACTIVITY_EXPORT_WIDTHS);
 
-            // Header row-la Excel filter dropdown (AutoFilter) add panra line
+
             if (!rows.isEmpty()) {
                 sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(
                         0, rows.size(), 0, DAILY_ACTIVITY_EXPORT_HEADERS.length - 1));
@@ -465,15 +572,10 @@ public class ReportService {
         return o == null ? "" : String.valueOf(o);
     }
 
-    /**
-     * Sets fixed column widths (in characters) on an Excel sheet. Used instead of
-     * sheet.autoSizeColumn(), which requires AWT font metrics that aren't reliably
-     * available in headless server environments and produces inconsistent widths.
-     */
+
     private void setColumnWidths(Sheet sheet, int[] widthsInChars) {
         for (int i = 0; i < widthsInChars.length; i++) {
-            // POI width units are 1/256th of a character; pad a couple of chars
-            // for comfortable spacing around the content.
+
             sheet.setColumnWidth(i, (widthsInChars[i] + 2) * 256);
         }
     }
@@ -508,7 +610,7 @@ public class ReportService {
                     for (int i = 0; i < relativeWidths.length; i++) widths[i] = relativeWidths[i];
                     table.setWidths(widths);
                 } catch (Exception ignored) {
-                    // Falls back to equal column widths if the array is malformed.
+
                 }
             }
 

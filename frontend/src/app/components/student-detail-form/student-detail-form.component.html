@@ -184,8 +184,7 @@
 }
 </div>
 
-      <!-- Tran Name (dropdown — populated with all Trxn Master entries for the chosen Tran ID;
-           free-entry text field when Tran ID is OT - Others) -->
+     
       <div class="field" [class.field-error-state]="showError('tranNumber') || (form.get('tranId')?.value === 'OT' && showError('tranNameOther'))">
         <label for="f-tname">Tran Name <span class="req">*</span></label>
         @if (mode === 'new') {

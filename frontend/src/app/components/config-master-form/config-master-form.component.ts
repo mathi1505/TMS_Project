@@ -100,9 +100,7 @@ export class ConfigMasterFormComponent implements OnInit {
     : null;
 
 
-  // =========================
-  // NEW
-  // =========================
+  
   if (this.mode === 'new') {
 
     this.form.enable();
@@ -116,7 +114,7 @@ export class ConfigMasterFormComponent implements OnInit {
 
       this.refreshPreviewId(configMaster);
 
-      // TRXN / Other validation
+     
       this.updateConfigNameValidator(configMaster);
     }
 
@@ -125,8 +123,7 @@ export class ConfigMasterFormComponent implements OnInit {
 
         this.refreshPreviewId(code);
 
-        // TRXN -> pattern
-        // Other -> required only
+        
         this.updateConfigNameValidator(code);
       }
     );
@@ -134,9 +131,6 @@ export class ConfigMasterFormComponent implements OnInit {
   }
 
 
-  // =========================
-  // MODIFY / VIEW
-  // =========================
   else if (configMaster && id) {
 
     this.svc.getByKey(configMaster, id).subscribe(found => {
@@ -147,7 +141,7 @@ export class ConfigMasterFormComponent implements OnInit {
 
         this.form.patchValue(found);
 
-        // Existing record-ku correct validator
+      
         this.updateConfigNameValidator(found.configMaster);
 
         if (this.mode === 'modify') {
@@ -185,24 +179,20 @@ private updateConfigNameValidator(
     return;
   }
 
-  // Remove old validators first
   configNameControl.clearValidators();
 
-  // TRXN மட்டும் strict format
-  if (code?.trim().toUpperCase() === 'TRXN') {
+  const master = code?.trim().toUpperCase();
+
+  if (master === 'TRXN') {
 
     configNameControl.setValidators([
       Validators.required,
-
-      // Exactly:
-      // 2 letters + space + hyphen + space + anything
       Validators.pattern(/^[A-Za-z]{2}\s-\s.+$/)
     ]);
 
   } else {
 
-    // Other Config Master
-    // Empty allowed illa, but format restriction illa
+   
     configNameControl.setValidators([
       Validators.required
     ]);

@@ -16,7 +16,7 @@ import { ReportDownloadFormat, ReportStudentSummary, REPORT_DOWNLOAD_OPTIONS } f
   selector: 'app-report-student-list',
   standalone: true,
   imports: [CommonModule, FormsModule, PaginationComponent],
-  templateUrl: './report-student-list.component.html',
+  templateUrl: './report-student-list.component.html', 
   styleUrl: './report-student-list.component.css'
 })
 export class ReportStudentListComponent implements OnInit, OnDestroy {
@@ -29,9 +29,12 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   studentTypeOptions: { value: string; label: string }[] = [];
   downloadOptions = REPORT_DOWNLOAD_OPTIONS;
   downloadFormat: ReportDownloadFormat | '' = '';
-
+ 
   records: ReportStudentSummary[] = [];
   loading = false;
+
+  /** Where the Back button should return to - defaults to the Dash Board. */
+  returnTo = '/dashboard';
 
 
   nameSuggestions: ReportStudentSummary[] = [];
@@ -53,10 +56,14 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Arriving from the Reports Dash Board with a student-type tile clicked.
+   
     const incomingType = this.route.snapshot.queryParamMap.get('studentType');
     if (incomingType) {
       this.searchType = incomingType;
+    }
+    const incomingReturnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    if (incomingReturnTo) {
+      this.returnTo = incomingReturnTo;
     }
 
     this.configSub = this.configDetSvc.activeData$.subscribe(rows => {
@@ -146,14 +153,29 @@ export class ReportStudentListComponent implements OnInit, OnDestroy {
   onFullView(row: ReportStudentSummary): void {
 
     this.router.navigate(['/student-master-form'], {
-      queryParams: { mode: 'view', id: row.studentId, studentNumber: row.studentNumber, returnTo: '/report' }
+      queryParams: { mode: 'view', id: row.studentId, studentNumber: row.studentNumber, returnTo: this.currentUrl() }
     });
   }
 
   onDailyActivity(row: ReportStudentSummary): void {
     this.router.navigate(['/report-daily-activity'], {
-      queryParams: { id: row.studentId, studentNumber: row.studentNumber }
+      queryParams: { id: row.studentId, studentNumber: row.studentNumber, returnTo: this.currentUrl() }
     });
+  }
+
+  onBack(): void {
+    this.router.navigateByUrl(this.returnTo);
+  }
+
+  private currentUrl(): string {
+    const params = new URLSearchParams();
+    if (this.searchName?.trim()) params.set('name', this.searchName.trim());
+    if (this.searchType) params.set('studentType', this.searchType);
+    if (this.searchNumber !== null && this.searchNumber !== undefined) {
+      params.set('searchNumber', String(this.searchNumber));
+    }
+    params.set('returnTo', this.returnTo);
+    return `/report?${params.toString()}`;
   }
 
   onDownload(): void {

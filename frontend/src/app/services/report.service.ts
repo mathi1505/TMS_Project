@@ -5,8 +5,10 @@ import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   ExportFileResponse,
+  ReportDailyActivityListRow,
   ReportDailyActivityResponse,
   ReportDownloadFormat,
+  ReportStudentActivitySummary,
   ReportStudentSummary,
 } from '../models/report.model';
 
@@ -58,6 +60,25 @@ export class ReportService {
   }
 
   
+  searchActivities(studentType: string, tranParticular: string, studentNumber: number | null,
+                    currentDayOnly: boolean): Observable<ReportStudentActivitySummary[]> {
+    let params = new HttpParams().set('currentDayOnly', currentDayOnly);
+    if (studentType) params = params.set('studentType', studentType);
+    if (tranParticular) params = params.set('tranParticular', tranParticular);
+    if (studentNumber !== null && studentNumber !== undefined) params = params.set('studentNumber', studentNumber);
+    return this.http.get<ReportStudentActivitySummary[]>(`${this.baseUrl}/activities`, { params });
+  }
+
+  /** Student Daily Activity Report, ALL-STUDENTS mode - the "Daily Activity" button. */
+  dailyActivityList(studentType: string, tranParticular: string, studentNumber: number | null,
+                     currentDayOnly: boolean): Observable<ReportDailyActivityListRow[]> {
+    let params = new HttpParams().set('currentDayOnly', currentDayOnly);
+    if (studentType) params = params.set('studentType', studentType);
+    if (tranParticular) params = params.set('tranParticular', tranParticular);
+    if (studentNumber !== null && studentNumber !== undefined) params = params.set('studentNumber', studentNumber);
+    return this.http.get<ReportDailyActivityListRow[]>(`${this.baseUrl}/activities/daily-activity`, { params });
+  }
+
   exportActivities(studentType: string, tranParticular: string, studentNumber: number | null,
                     format: ReportDownloadFormat): Observable<ExportFileResponse> {
     let params = new HttpParams().set('format', format);

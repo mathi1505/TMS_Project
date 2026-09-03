@@ -13,6 +13,7 @@ export interface ConfigDetail {
 }
 
 export const CONFIG_MASTER_OPTIONS: { value: ConfigMasterCode; label: string; description: string }[] = [
+  { value: 'ROLE', label: 'ROLE – User Role',          description: 'Login roles offered on User Maintenance and the Login screen' },
   { value: 'STUD', label: 'STUD – Student Type',      description: 'Internship / Training type used on Student Master'        },
   { value: 'MODE', label: 'MODE – Study Mode',         description: 'Online / Offline / Hybrid delivery mode'                  },
   { value: 'TRAN', label: 'TRAN – Progress Status',    description: 'Student progress / transaction status'                    },
@@ -27,12 +28,7 @@ export function configMasterLabel(code: ConfigMasterCode): string {
   return CONFIG_MASTER_OPTIONS.find(o => o.value === code)?.label ?? code;
 }
 
-/**
- * Config entries are typed as "CODE - Label" (e.g. "AS - Assessor Name").
- * This pulls the short code out (used as a foreign key elsewhere, e.g.
- * Transaction Master's 2-char Transaction ID) and keeps the full text as label.
- * Falls back to the first 2 chars of the name if no "-" is present.
- */
+
 export function parseCodeLabel(configName: string): { code: string; label: string } {
   const name = (configName ?? '').trim();
   const dashIdx = name.search(/[-–—]/);

@@ -17,7 +17,7 @@ public class ReportStudentSummary {
 
     private String studentName;
 
-    /** Derived from the Student ID prefix, e.g. "TR", "IN" - matches Config Master (STUD) codes. */
+
     private String studentType;
 
     private LocalDate joiningDate;
@@ -25,6 +25,6 @@ public class ReportStudentSummary {
     private Long mobileNo;
     private String emailId;
 
-    /** Business status of the student (In Progress / Left / Transferred to HO). */
+
     private String status;
 }

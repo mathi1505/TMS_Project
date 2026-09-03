@@ -97,6 +97,32 @@
   color: var(--muted);
 }
 
+.login-select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.login-select:focus {
+  border-color: var(--accent);
+}
+
+.login-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.login-field-row .login-field {
+  flex: 1;
+  min-width: 0;
+}
+
 .login-password-wrap {
   position: relative;
   display: flex;

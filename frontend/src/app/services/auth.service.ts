@@ -40,8 +40,16 @@ export class AuthService {
     return this.currentUser()?.role === 'ADMIN';
   }
 
+  isStaff(): boolean {
+    return this.currentUser()?.role === 'STAFF';
+  }
+
+  isStudent(): boolean {
+    return this.currentUser()?.role === 'STUDENT';
+  }
+
   private persist(res: LoginResponse): void {
-    const user: CurrentUser = { username: res.username, fullName: res.fullName, role: res.role };
+    const user: CurrentUser = { userId: res.userId, userNo: res.userNo, userName: res.userName, role: res.role };
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token, user }));
     this.token = res.token;
     this.currentUser.set(user);

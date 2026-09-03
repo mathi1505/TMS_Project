@@ -1,4 +1,4 @@
 package com.example.lissomsoft.tms.security;
 
-public record AuthenticatedPrincipal(String username, Role role) {
+public record AuthenticatedPrincipal(String userId, Integer userNo, String userName, String role) {
 }

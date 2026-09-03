@@ -1,0 +1,98 @@
+.status-in-progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+.status-in-progress .status-dot { background: #2563eb; }
+
+.status-completed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+.status-completed .status-dot { background: #16a34a; }
+
+.status-left {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.status-left .status-dot { background: #dc2626; }
+
+.status-transferred {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+.status-transferred .status-dot { background: #d97706; }
+
+.download-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.download-bar label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+.download-bar select {
+  width: auto;
+  min-width: 160px;
+}
+
+.top-download-bar {
+  padding: 0;
+  border-top: none;
+}
+
+.bottom-toolbar {
+  justify-content: flex-end;
+}
+
+.day-toggle-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.day-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  font-size: 13px;
+  color: var(--text-secondary, #475569);
+  white-space: nowrap;
+}
+
+.day-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.table-card .table-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.table-card .data-table {
+  table-layout: auto;
+  width: max-content;
+  min-width: 100%;
+}
+
+.table-card .data-table .col-id       { min-width: 110px; }
+.table-card .data-table .col-name     { min-width: 160px; }
+.table-card .data-table .col-type     { min-width: 120px; }
+.table-card .data-table .col-joining  { min-width: 120px; }
+.table-card .data-table .col-trainer  { min-width: 140px; }
+.table-card .data-table .col-mobile   { min-width: 120px; }
+.table-card .data-table .col-tech     { min-width: 130px; }
+.table-card .data-table .col-status   { min-width: 150px; }
+.table-card .data-table .col-actions  { min-width: 220px; }

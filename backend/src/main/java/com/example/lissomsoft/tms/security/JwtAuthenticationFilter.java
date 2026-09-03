@@ -30,8 +30,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Optional<JwtService.ParsedToken> parsed = jwtService.validate(token);
             if (parsed.isPresent()) {
                 JwtService.ParsedToken claims = parsed.get();
-                AuthenticatedPrincipal principal = new AuthenticatedPrincipal(claims.username(), claims.role());
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + claims.role().name()));
+                AuthenticatedPrincipal principal = new AuthenticatedPrincipal(claims.userId(), claims.userNo(), claims.userName(), claims.role());
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + claims.role()));
                 var authentication = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

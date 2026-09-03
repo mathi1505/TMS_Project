@@ -1,32 +1,41 @@
 package com.example.lissomsoft.tms.entity;
 
-import com.example.lissomsoft.tms.security.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "app_user")
+@IdClass(UserId.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id", length = 5, nullable = false)
+    private String userId;
+    @Id
+    @Column(name = "user_no", nullable = false)
+    private Integer userNo;
 
-    @Column(name = "username", length = 30, nullable = false, unique = true)
-    private String username;
+    @Column(name = "user_name", length = 25, nullable = false)
+    private String userName;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
-    @Column(name = "full_name", length = 50)
-    private String fullName;
+    @Column(name = "role", length = 20, nullable = false)
+    private String role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 10, nullable = false)
-    private Role role;
+    @Column(name = "created_by", length = 25)
+    private String createdBy;
+
+    @Column(name = "created_date")
+    private LocalDate createdDate;
+
+    @Column(name = "del_flg", length = 1, nullable = false)
+    private String delFlg = "A";
 }

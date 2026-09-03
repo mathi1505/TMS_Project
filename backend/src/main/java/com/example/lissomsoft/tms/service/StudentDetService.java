@@ -39,19 +39,21 @@ public class StudentDetService {
     }
 
     @Transactional(readOnly = true)
-    public StudentDet getByKey(String studentId, LocalDate tranDate, String tranId, Integer tranNumber) {
-        return repository.findByStudentIdAndTranDateAndTranIdAndTranNumber(studentId, tranDate, tranId, tranNumber)
+    public StudentDet getByKey(String studentId, LocalDate tranDate, String tranId, Integer tranNumber,
+                                Integer entrySeq) {
+        return repository.findByStudentIdAndTranDateAndTranIdAndTranNumberAndEntrySeq(
+                        studentId, tranDate, tranId, tranNumber, entrySeq)
                 .orElseThrow(() -> ApiException.notFound("Daily activity record not found."));
     }
 
     @Transactional(readOnly = true)
     public StudentDet getByKey(String studentId, Integer studentNumber, LocalDate tranDate, String tranId,
-                                Integer tranNumber) {
+                                Integer tranNumber, Integer entrySeq) {
         if (studentNumber == null) {
-            return getByKey(studentId, tranDate, tranId, tranNumber);
+            return getByKey(studentId, tranDate, tranId, tranNumber, entrySeq);
         }
-        return repository.findByStudentIdAndStudentNumberAndTranDateAndTranIdAndTranNumber(
-                        studentId, studentNumber, tranDate, tranId, tranNumber)
+        return repository.findByStudentIdAndStudentNumberAndTranDateAndTranIdAndTranNumberAndEntrySeq(
+                        studentId, studentNumber, tranDate, tranId, tranNumber, entrySeq)
                 .orElseThrow(() -> ApiException.notFound("Daily activity record not found."));
     }
 
@@ -68,12 +70,23 @@ public class StudentDetService {
         return repository.findMaxTranNumber(studentId, studentNumber, tranId) + 1;
     }
 
+
+    @Transactional(readOnly = true)
+    public int nextEntrySeq(String studentId, Integer studentNumber, LocalDate tranDate, String tranId,
+                             Integer tranNumber) {
+        Integer effectiveNumber = studentNumber == null ? 1 : studentNumber;
+        return repository.findMaxEntrySeq(studentId, effectiveNumber, tranDate, tranId, tranNumber) + 1;
+    }
+
     public StudentDet create(StudentDet record) {
 
-        // Do NOT generate tranNumber.
-        // Use the tranNumber selected from Transaction Master.
+
 
         record.setEntryDate(LocalDate.now());
+
+        record.setEntrySeq(nextEntrySeq(
+                record.getStudentId(), record.getStudentNumber(), record.getTranDate(),
+                record.getTranId(), record.getTranNumber()));
 
         if (record.getDelFlag() == null) {
             record.setDelFlag("A");
@@ -84,14 +97,14 @@ public class StudentDetService {
     
 
     public StudentDet update(String studentId, LocalDate tranDate, String tranId, Integer tranNumber,
-                              StudentDet record) {
-        StudentDet existing = getByKey(studentId, tranDate, tranId, tranNumber);
+                              Integer entrySeq, StudentDet record) {
+        StudentDet existing = getByKey(studentId, tranDate, tranId, tranNumber, entrySeq);
         return applyUpdate(existing, record);
     }
 
     public StudentDet update(String studentId, Integer studentNumber, LocalDate tranDate, String tranId,
-                              Integer tranNumber, StudentDet record) {
-        StudentDet existing = getByKey(studentId, studentNumber, tranDate, tranId, tranNumber);
+                              Integer tranNumber, Integer entrySeq, StudentDet record) {
+        StudentDet existing = getByKey(studentId, studentNumber, tranDate, tranId, tranNumber, entrySeq);
         return applyUpdate(existing, record);
     }
 
@@ -120,4 +133,3 @@ public class StudentDetService {
                 .orElse(null);
     }
 }
-

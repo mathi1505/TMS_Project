@@ -1,6 +1,6 @@
 <section class="screen form-screen">
 
-  <!-- Page header — title + record badge + mode pill -->
+  
   <div class="form-page-header">
     <div class="form-page-title-group">
       <h2>Course Module Details</h2>
@@ -26,7 +26,7 @@
   <div class="card form-card">
     <form [formGroup]="form" class="record-grid" autocomplete="off">
 
-      <!-- Course ID -->
+      
       <div class="field key-field">
         <label for="f-courseId">Course ID<span class="req">*</span></label>
         <select
@@ -60,7 +60,7 @@
         <input type="hidden" formControlName="courseDetId" />
       </div>
 
-      <!-- Technology -->
+     
       <div class="field">
         <label for="f-tech">Technology<span class="req">*</span></label>
         <input
@@ -76,7 +76,7 @@
         }
       </div>
 
-      <!-- Duration -->
+     
       <div class="field">
         <label for="f-dur">Duration (Weeks)<span class="req">*</span></label>
         <input
@@ -93,7 +93,7 @@
         }
       </div>
 
-      <!-- Topics Covered -->
+     
       <div class="field field-wide">
         <label for="f-topic">Topics Covered<span class="req">*</span></label>
         <input
@@ -109,7 +109,6 @@
         }
       </div>
 
-      <!-- Hours -->
       <div class="field">
         <label for="f-hours">Hours<span class="req">*</span></label>
         <input
@@ -125,7 +124,7 @@
         }
       </div>
 
-      <!-- Status — locked to Active on first entry; only editable while modifying -->
+      
       <div class="field">
         <label for="f-status">Status<span class="req">*</span></label>
         @if (mode === 'modify') {

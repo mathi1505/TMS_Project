@@ -16,6 +16,7 @@ public class StudentDetId implements Serializable {
     private LocalDate tranDate;
     private String tranId;
     private Integer tranNumber;
+    private Integer entrySeq;
 
     @Override
     public boolean equals(Object o) {
@@ -23,11 +24,12 @@ public class StudentDetId implements Serializable {
         if (!(o instanceof StudentDetId that)) return false;
         return Objects.equals(studentId, that.studentId) && Objects.equals(studentNumber, that.studentNumber)
                 && Objects.equals(tranDate, that.tranDate)
-                && Objects.equals(tranId, that.tranId) && Objects.equals(tranNumber, that.tranNumber);
+                && Objects.equals(tranId, that.tranId) && Objects.equals(tranNumber, that.tranNumber)
+                && Objects.equals(entrySeq, that.entrySeq);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(studentId, studentNumber, tranDate, tranId, tranNumber);
+        return Objects.hash(studentId, studentNumber, tranDate, tranId, tranNumber, entrySeq);
     }
 }

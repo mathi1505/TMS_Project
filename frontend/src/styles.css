@@ -558,6 +558,17 @@ tfoot td {
   border-color: #fdba74;
 }
 
+.daily-activity-btn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: #fdba74;
+}
+
+.daily-activity-btn:hover {
+  background: var(--warn);
+  color: #fff;
+}
+
 .modify-btn:hover {
   background: var(--warn);
   color: #fff;

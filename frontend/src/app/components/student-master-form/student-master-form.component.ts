@@ -86,8 +86,7 @@ export class StudentMasterFormComponent implements OnInit, OnDestroy {
 
   blurredFields = new Set<string>();
 
-  // Where "← Back" should go; falls back to /student-master when not set
-  // (e.g. opened in view mode from the Student Information Report).
+
   returnTo: string | null = null;
 
   private sub!: Subscription;

@@ -184,7 +184,7 @@ this.dataSub.add(this.configDetSvc.activeData$.subscribe(rows => {
     this.particularOptions = [...this.particularOptions, current];
   }
 
-  // Student Type
+
   this.studentTypeOptions = rows
     .filter(r => r.configMaster === 'STUD' && r.configName.trim() !== 'Employee')
     .map(r => ({
@@ -192,7 +192,7 @@ this.dataSub.add(this.configDetSvc.activeData$.subscribe(rows => {
       label: r.configName
     }));
 
-  // Tran ID
+
   this.tranIdOptions = rows
     .filter(r => r.configMaster === 'TRXN')
     .map(r => ({
@@ -291,9 +291,11 @@ this.dataSub.add(this.configDetSvc.activeData$.subscribe(rows => {
       const tranDate   = params.get('tranDate');
       const tranId     = params.get('tranId') as TranIdCode;
       const tranNumber = params.get('tranNumber') ? Number(params.get('tranNumber')) : null;
+      const entrySeqParam = params.get('entrySeq');
+      const entrySeq   = entrySeqParam !== null ? Number(entrySeqParam) : undefined;
 
       if (studentId && tranDate && tranId && tranNumber !== null) {
-        this.svc.getByKey(studentId, tranDate, tranId, tranNumber, studentNumber).subscribe(found => {
+        this.svc.getByKey(studentId, tranDate, tranId, tranNumber, studentNumber, entrySeq).subscribe(found => {
           if (found) {
             this.current = found;
             this.form.patchValue({
@@ -393,7 +395,7 @@ this.dataSub.add(this.configDetSvc.activeData$.subscribe(rows => {
     }
 
     if (tid === 'OT') {
-      // Others: free-entry Tran Name instead of the Trxn Master dropdown
+      
       this.tranEntries = [];
       this.form.get('tranNumber')?.disable({ emitEvent: false });
       this.form.get('tranNameOther')?.enable({ emitEvent: false });

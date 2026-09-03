@@ -13,6 +13,8 @@ interface DashTile {
   color: string;
   colorSoft: string;
   code: string;
+  
+  isTotal: boolean;
 }
 
 @Component({
@@ -54,16 +56,17 @@ export class ReportsDashboardComponent implements OnInit {
     this.load();
   }
 
+  
   onMasterTileClick(tile: DashTile): void {
-    this.router.navigate(['/student-master'], {
-      queryParams: { studentType: tile.code || null }
+    this.router.navigate(['/report'], {
+      queryParams: { studentType: tile.code || null, returnTo: '/dashboard' }
     });
   }
 
-  
+ 
   onActivityTileClick(tile: DashTile): void {
-    this.router.navigate(['/student-detail'], {
-      queryParams: { tranParticular: tile.code || null }
+    this.router.navigate(['/report-activity'], {
+      queryParams: { tranParticular: tile.code || null, returnTo: '/dashboard' }
     });
   }
 
@@ -94,7 +97,8 @@ export class ReportsDashboardComponent implements OnInit {
         value: summary.totalStudents,
         color: totalStudentColor.solid,
         colorSoft: totalStudentColor.soft,
-        code: ''
+        code: '',
+        isTotal: true
       },
       ...summary.studentMasterCounts.map(item => this.toTile(item, nextColor()))
     ];
@@ -106,28 +110,29 @@ export class ReportsDashboardComponent implements OnInit {
         value: summary.totalActivityStudents,
         color: totalActivityColor.solid,
         colorSoft: totalActivityColor.soft,
-        code: ''
+        code: '',
+        isTotal: true
       },
       ...summary.studentActivityCounts.map(item => this.toTile(item, nextColor()))
     ];
   }
 
+  /**
+   * Tile label always mirrors the Configuration Master entry exactly as
+   * typed (e.g. a Tran Particular named "Test - 3" shows as
+   * "Total Students [Test - 3]") - no prefix is stripped off.
+   */
   private toTile(
     item: DashboardCountItem,
     color: { solid: string; soft: string }
   ): DashTile {
     return {
-      title: `Total Students [${this.displayLabel(item.label)}]`,
+      title: `Total Students [${item.label}]`,
       value: item.count,
       color: color.solid,
       colorSoft: color.soft,
-      code: item.code
+      code: item.code,
+      isTotal: false
     };
-  }
-
-  
-  private displayLabel(raw: string): string {
-    const dashIdx = raw.search(/[-–—]/);
-    return dashIdx > 0 ? raw.slice(dashIdx + 1).trim() : raw;
   }
 }

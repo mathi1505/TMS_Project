@@ -285,6 +285,11 @@
   color: #6EE7B7;
 }
 
+.user-role-badge.role-student {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FCD34D;
+}
+
 .logout-btn {
   background: rgba(255, 255, 255, 0.08);
   border: none;

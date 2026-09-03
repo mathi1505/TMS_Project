@@ -24,6 +24,9 @@ export interface StudentDetail {
   tranId: TranIdCode;
   tranNumber: number;
 
+ 
+  entrySeq?: number;
+
   tranParticular: string;
 
   courseId: string;

@@ -13,6 +13,18 @@
     </div>
 
     <nav class="sidebar-nav">
+      @if (auth.isStudent()) {
+        <div class="nav-group">
+          <div class="nav-group-title">My Activity</div>
+          <a routerLink="/my-activity" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'My Daily Activity' : ''">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+            </svg>
+            <span class="nav-label">My Daily Activity</span>
+          </a>
+        </div>
+      }
+      @if (!auth.isStudent()) {
       <div class="nav-group">
         <div class="nav-group-title">Masters</div>
         <a routerLink="/course-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Course Master' : ''">
@@ -80,6 +92,20 @@
           <span class="nav-label">Student Information</span>
         </a>
       </div>
+
+      }
+      @if (auth.isAdmin()) {
+        <div class="nav-group">
+          <div class="nav-group-title">Administration</div>
+          <a routerLink="/user-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'User Maintenance' : ''">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              <path fill-rule="evenodd" d="M18 8a1 1 0 00-1-1h-1V6a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0V9h1a1 1 0 001-1z" clip-rule="evenodd"/>
+            </svg>
+            <span class="nav-label">User Maintenance</span>
+          </a>
+        </div>
+      }
     </nav>
 
 
@@ -106,8 +132,8 @@
       <!-- Logged-in user + logout -->
       @if (auth.currentUser(); as user) {
         <div class="topbar-user">
-          <span class="user-name">{{ user.fullName }}</span>
-          <span class="user-role-badge" [class.role-admin]="user.role === 'ADMIN'" [class.role-staff]="user.role === 'STAFF'">{{ user.role }}</span>
+          <span class="user-name">{{ user.userName }}</span>
+          <span class="user-role-badge" [class.role-admin]="user.role === 'ADMIN'" [class.role-staff]="user.role === 'STAFF'" [class.role-student]="user.role === 'STUDENT'">{{ user.role }}</span>
           <button class="logout-btn" (click)="logout()" title="Log out">Logout</button>
         </div>
       }

@@ -104,14 +104,14 @@ export class ConfigMasterListComponent implements OnInit, OnDestroy {
 
   masterLabel(code: ConfigMasterCode): string {
 
-  // Existing fixed categories
+ 
   const staticLabel = configMasterLabel(code);
 
   if (staticLabel !== code) {
     return staticLabel;
   }
 
-  // New categories from database
+
   const record = this.allRecords.find(
     r => r.configMaster === code
   );

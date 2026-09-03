@@ -1,6 +1,6 @@
 <section class="screen form-screen">
 
-  <!-- Page header -->
+  
   <div class="form-page-header">
     <div class="form-page-title-group">
       <h2>Configuration Master</h2>
@@ -26,7 +26,7 @@
   <div class="card form-card">
     <form [formGroup]="form" class="record-grid" autocomplete="off">
 
-      <!-- Configuration Master (free text) -->
+  
       <div class="field key-field">
         <label for="f-cm">Configuration Master <span class="req">*</span></label>
         @if (mode === 'new') {
@@ -54,7 +54,7 @@
       </div>
  
 
-      <!-- Configuration ID (auto-generated) -->
+    
       <div class="field key-field">
         <label for="f-id">
           Configuration ID
@@ -75,7 +75,7 @@
           />
         }
       </div>
-     <!-- Category-->
+  
 <div class="field field-wide">
   <label for="f-cmn">
     Category
@@ -99,7 +99,7 @@
     </small>
   }
 </div>
-     <!-- Configuration Name -->
+   
 <div class="field field-wide">
 
   <label for="f-name">
@@ -111,23 +111,25 @@
     type="text"
     formControlName="configName"
     maxlength="25"
-    placeholder="e.g. AS - Assessor Name"
+    [placeholder]="form.get('configMaster')?.value === 'ROLE' ? 'e.g. ADMIN - Administrator' : 'e.g. AS - Assessor Name'"
     style="text-transform: uppercase;"
   />
 
   @if (
-    form.get('configName')?.hasError('pattern') &&
-    (
-      form.get('configName')?.touched ||
-      form.get('configName')?.dirty
-    )
-  ) {
-    <small class="field-error">
-      Format must be: 2 characters - Name
-      <br>
-      Example: AS - Assessor Name
-    </small>
-  }
+  form.get('configMaster')?.value === 'TRXN' &&
+  form.get('configName')?.hasError('pattern') &&
+  (
+    form.get('configName')?.touched ||
+    form.get('configName')?.dirty
+  )
+) {
+  <small class="field-error">
+    Format must be: 2 characters - Name
+    <br>
+    Example: AS - Assessor Name
+  </small>
+}
+
 
   @if (
     form.get('configName')?.hasError('required') &&
@@ -155,7 +157,6 @@
 
 </div>
 
-      <!-- Del Flag / Status -->
       <div class="field">
         <label for="f-del">Status <span class="req">*</span></label>
         @if (mode === 'modify') {
@@ -181,7 +182,7 @@
 
     </form>
 
-    <!-- ── Action footer ── -->
+   
     <div class="form-footer">
       <button class="btn btn-ghost" (click)="goBack()">← Back</button>
       @if (mode !== 'view') {

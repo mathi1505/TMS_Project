@@ -32,12 +32,15 @@ export class StudentDetailService extends CachedCrudService<StudentDetail> {
   }
 
   getByKey(studentId: string, tranDate: string, tranId: TranIdCode, tranNumber: number,
-           studentNumber?: number): Observable<StudentDetail | undefined> {
+           studentNumber?: number, entrySeq?: number): Observable<StudentDetail | undefined> {
     let params = new HttpParams()
       .set('studentId', studentId).set('tranDate', tranDate)
       .set('tranId', tranId).set('tranNumber', tranNumber);
     if (studentNumber !== undefined && studentNumber !== null) {
       params = params.set('studentNumber', studentNumber);
+    }
+    if (entrySeq !== undefined && entrySeq !== null) {
+      params = params.set('entrySeq', entrySeq);
     }
     return undefinedOn404(this.http.get<StudentDetail>(`${this.baseUrl}/key`, { params }));
   }
@@ -60,6 +63,9 @@ export class StudentDetailService extends CachedCrudService<StudentDetail> {
       .set('tranId', record.tranId).set('tranNumber', record.tranNumber);
     if (record.studentNumber !== undefined && record.studentNumber !== null) {
       params = params.set('studentNumber', record.studentNumber);
+    }
+    if (record.entrySeq !== undefined && record.entrySeq !== null) {
+      params = params.set('entrySeq', record.entrySeq);
     }
     return this.putAndRefresh(this.baseUrl, record, params);
   }

@@ -33,8 +33,9 @@ public class StudentDetController {
                                 @RequestParam(required = false) Integer studentNumber,
                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,
                                 @RequestParam String tranId,
-                                @RequestParam Integer tranNumber) {
-        return service.getByKey(studentId, studentNumber, tranDate, tranId, tranNumber);
+                                @RequestParam Integer tranNumber,
+                                @RequestParam(required = false, defaultValue = "1") Integer entrySeq) {
+        return service.getByKey(studentId, studentNumber, tranDate, tranId, tranNumber, entrySeq);
     }
 
     @GetMapping("/next-tran-number")
@@ -42,6 +43,16 @@ public class StudentDetController {
                                @RequestParam(required = false) Integer studentNumber,
                                @RequestParam String tranId) {
         return service.nextTranNumber(studentId, studentNumber, tranId);
+    }
+
+
+    @GetMapping("/next-entry-seq")
+    public int nextEntrySeq(@RequestParam String studentId,
+                             @RequestParam(required = false) Integer studentNumber,
+                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,
+                             @RequestParam String tranId,
+                             @RequestParam Integer tranNumber) {
+        return service.nextEntrySeq(studentId, studentNumber, tranDate, tranId, tranNumber);
     }
 
     @PostMapping
@@ -60,7 +71,8 @@ public class StudentDetController {
                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,
                               @RequestParam String tranId,
                               @RequestParam Integer tranNumber,
+                              @RequestParam(required = false, defaultValue = "1") Integer entrySeq,
                               @RequestBody StudentDet record) {
-        return service.update(studentId, studentNumber, tranDate, tranId, tranNumber, record);
+        return service.update(studentId, studentNumber, tranDate, tranId, tranNumber, entrySeq, record);
     }
 }

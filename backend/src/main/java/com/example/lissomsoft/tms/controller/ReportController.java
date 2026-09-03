@@ -1,7 +1,9 @@
 package com.example.lissomsoft.tms.controller;
 
 import com.example.lissomsoft.tms.dto.ExportFileResponse;
+import com.example.lissomsoft.tms.dto.ReportDailyActivityListRow;
 import com.example.lissomsoft.tms.dto.ReportDailyActivityResponse;
+import com.example.lissomsoft.tms.dto.ReportStudentActivitySummary;
 import com.example.lissomsoft.tms.dto.ReportStudentSummary;
 import com.example.lissomsoft.tms.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,25 @@ public class ReportController {
         return service.exportDailyActivity(studentId, studentNumber, month, year, format);
     }
 
+
+    @GetMapping("/activities")
+    public List<ReportStudentActivitySummary> searchActivities(
+            @RequestParam(required = false) String studentType,
+            @RequestParam(required = false) String tranParticular,
+            @RequestParam(required = false) Integer studentNumber,
+            @RequestParam(required = false, defaultValue = "true") boolean currentDayOnly) {
+        return service.searchActivities(studentType, tranParticular, studentNumber, currentDayOnly);
+    }
+
+
+    @GetMapping("/activities/daily-activity")
+    public List<ReportDailyActivityListRow> dailyActivityList(
+            @RequestParam(required = false) String studentType,
+            @RequestParam(required = false) String tranParticular,
+            @RequestParam(required = false) Integer studentNumber,
+            @RequestParam(required = false, defaultValue = "false") boolean currentDayOnly) {
+        return service.searchActivityRows(studentType, tranParticular, studentNumber, currentDayOnly);
+    }
 
     @GetMapping("/activities/export")
     public ExportFileResponse exportActivities(

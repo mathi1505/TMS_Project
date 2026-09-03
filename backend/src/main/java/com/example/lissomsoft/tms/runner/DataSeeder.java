@@ -1,5 +1,4 @@
 package com.example.lissomsoft.tms.runner;
-import com.example.lissomsoft.tms.security.Role;
 import com.example.lissomsoft.tms.entity.User;
 import com.example.lissomsoft.tms.repository.UserRepository;
 import com.example.lissomsoft.tms.entity.ConfigDet;
@@ -46,9 +45,10 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedUsers() {
         if (userRepository.count() > 0) return;
+        LocalDate d = LocalDate.of(2026, 1, 1);
         userRepository.saveAll(java.util.List.of(
-            new User(null, "admin", passwordEncoder.encode("admin123"), "Administrator", Role.ADMIN),
-            new User(null, "staff", passwordEncoder.encode("staff123"), "Staff Member", Role.STAFF)
+            new User("ADM", 1, "admin", passwordEncoder.encode("admin123"), "ADMIN", "system", d, "A"),
+            new User("STF", 1, "staff", passwordEncoder.encode("staff123"), "STAFF", "system", d, "A")
         ));
     }
 
@@ -56,6 +56,9 @@ public class DataSeeder implements CommandLineRunner {
         if (configDetRepository.count() > 0) return;
         LocalDate d = LocalDate.of(2026, 1, 1);
         Object[][] rows = {
+            {"ROLE", 1, "ADMIN - Administrator"},
+            {"ROLE", 2, "STAFF - Staff"},
+            {"ROLE", 3, "STUDENT - Student"},
             {"STUD", 1, "INT - Internship"},
             {"STUD", 2, "TRI - Training"},
             {"MODE", 1, "Online"},

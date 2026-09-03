@@ -1,0 +1,165 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Student Activity Dashboard Report</h2>
+    </div>
+    <div class="download-bar top-download-bar">
+      <label for="ra-download">Download</label>
+      <select id="ra-download" [(ngModel)]="downloadFormat" class="status-select">
+        <option value="">Select format…</option>
+        @for (opt of downloadOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <button class="btn btn-primary" (click)="onDownload()">⬇ Download</button>
+    </div>
+  </div>
+
+  <div class="card search-card">
+    <div class="search-row">
+
+      <div class="field key-field">
+        <label for="ra-type">Student Type</label>
+        <select
+          id="ra-type"
+          [(ngModel)]="searchType"
+          class="status-select search-input"
+          (ngModelChange)="onFilterChange()"
+        >
+          <option value="">All</option>
+          @for (opt of studentTypeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field key-field">
+        <label for="ra-particular">Tran Particular</label>
+        <select
+          id="ra-particular"
+          [(ngModel)]="searchParticular"
+          class="status-select search-input"
+          (ngModelChange)="onFilterChange()"
+        >
+          <option value="">All</option>
+          @for (opt of particularOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field key-field">
+        <label for="ra-num">Student Number</label>
+        <input
+          id="ra-num" type="number" min="1"
+          [(ngModel)]="searchNumber"
+          (ngModelChange)="onFilterChange()"
+          placeholder="e.g. 1"
+          class="mono search-input" autocomplete="off"
+        />
+      </div>
+
+      <div class="field key-field day-toggle-field">
+        <label for="ra-today">Today Only</label>
+        <label class="day-toggle">
+          <input
+            id="ra-today" type="checkbox"
+            [(ngModel)]="currentDayOnly"
+            (ngModelChange)="onFilterChange()"
+          />
+          <span>Current day activity</span>
+        </label>
+      </div>
+
+      <button class="btn btn-ghost" (click)="clearSearch()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-card-head">
+      <span class="table-label">Student Activity {{ currentDayOnly ? '(Today)' : '(Latest)' }}</span>
+      <span class="record-count">{{ records.length }} record(s)</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col class="col-id" />
+          <col class="col-name" />
+          <col class="col-type" />
+          <col class="col-trainer" />
+          <col class="col-mobile" />
+          <col class="col-joining" />
+          <col class="col-tech" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-id">Student ID</th>
+            <th class="col-name">Name</th>
+            <th class="col-type">Type</th>
+            <th class="col-trainer">Trainer</th>
+            <th class="col-mobile">Mobile</th>
+            <th class="col-joining">Tran Date</th>
+            <th class="col-tech">Technology</th>
+            <th class="col-status">Tran Particular</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pagedRecords; track row.studentId + '::' + row.studentNumber) {
+            <tr>
+              <td class="col-id"><span class="id-chip mono">{{ row.studentId }}-{{ row.studentNumber }}</span></td>
+              <td class="col-name">{{ row.studentName }}</td>
+              <td class="col-type">{{ typeLabel(row) }}</td>
+              <td class="col-trainer">{{ row.trainerName }}</td>
+              <td class="col-mobile mono">{{ row.mobileNo }}</td>
+              <td class="col-joining mono">{{ row.tranDate }}</td>
+              <td class="col-tech">{{ row.technology }}</td>
+              <td class="col-status">
+                <span class="status-badge" [ngClass]="particularBadgeClass(row.tranParticular)">
+                  <span class="status-dot"></span>{{ row.tranParticular }}
+                </span>
+              </td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button class="btn-icon view-btn" (click)="onViewDetail(row)">👁 Full View</button>
+                  <button class="btn-icon daily-activity-btn" (click)="onRowDailyActivity(row)">📋 Daily Activity</button>
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="9" class="empty-cell">
+                @if (loading) { Loading… }
+                @else { No activity records found for the given search criteria. }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (records.length > 0) {
+      <div class="pagination-bar">
+        <span class="pagination-info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ records.length }}
+        </span>
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          (pageChange)="goToPage($event)"
+        ></app-pagination>
+      </div>
+    }
+
+  </div>
+
+  <div class="page-toolbar bottom-toolbar">
+    <button class="btn btn-ghost" (click)="onBack()">← Back</button>
+  </div>
+
+</section>
