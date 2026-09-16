@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 import { AuthService } from './services/auth.service';
+import { RoleAccessService } from './services/role-access.service';
 import { ToastMessage, ToastService } from './services/toast.service';
 
 @Component({
@@ -20,17 +21,26 @@ export class AppComponent {
 
   isLoginPage = false;
 
-  constructor(public auth: AuthService, private router: Router, toastService: ToastService) {
-    this.isLoginPage = this.router.url.startsWith('/login');
+  constructor(public auth: AuthService, public roleAccess: RoleAccessService, private router: Router, toastService: ToastService) {
+    this.isLoginPage = this.isBareRoute(this.router.url);
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(e => {
-        this.isLoginPage = e.urlAfterRedirects.startsWith('/login');
+        this.isLoginPage = this.isBareRoute(e.urlAfterRedirects);
       });
 
-
+    // Refresh the permission cache in the background on a hard page reload
+    // (already-logged-in session) so an admin's Role Access changes are
+    // picked up without forcing everyone to log out and back in.
+    if (this.auth.isLoggedIn() && !this.auth.isAdmin()) {
+      this.roleAccess.loadMyScreens().subscribe({ error: () => {} });
+    }
 
     toastService.messages$.subscribe(msg => this.showToast(msg));
+  }
+
+  private isBareRoute(url: string): boolean {
+    return url.startsWith('/login') || url.startsWith('/change-password');
   }
 
   toggleSidebar(): void {

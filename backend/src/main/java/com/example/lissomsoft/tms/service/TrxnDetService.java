@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ import java.util.List;
 public class TrxnDetService {
 
     private final TrxnDetRepository repository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<TrxnDet> getAll() {
@@ -47,6 +49,7 @@ public class TrxnDetService {
 
     public TrxnDet update(String trxnId, Integer masterNumber, LocalDate tranDate, LocalDate valueDate, String referenceNo, TrxnDet record) {
         TrxnDet existing = getByKey(trxnId, masterNumber, tranDate, valueDate, referenceNo);
+        Map<String, Object> before = activityLogService.snapshot(existing);
 
         LocalDate newValueDate = record.getValueDate() != null ? record.getValueDate() : existing.getValueDate();
         String newReferenceNo = record.getReferenceNo() == null ? "" : record.getReferenceNo();
@@ -58,7 +61,9 @@ public class TrxnDetService {
             existing.setDescription(record.getDescription());
             existing.setAmount(record.getAmount());
             existing.setDelFlag(record.getDelFlag() == null ? existing.getDelFlag() : record.getDelFlag());
-            return repository.save(existing);
+            TrxnDet saved = repository.save(existing);
+            activityLogService.appendModifyDiff("Daily Transaction Entry", "trxn_det", before, saved);
+            return saved;
         }
 
         TrxnDet replacement = new TrxnDet();
@@ -76,6 +81,8 @@ public class TrxnDetService {
 
         repository.delete(existing);
         repository.flush();
-        return repository.save(replacement);
+        TrxnDet saved = repository.save(replacement);
+        activityLogService.appendModifyDiff("Daily Transaction Entry", "trxn_det", before, saved);
+        return saved;
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class StudentDetService {
 
     private final StudentDetRepository repository;
     private final StudentMasterRepository studentMasterRepository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<StudentDet> getAll() {
@@ -109,6 +111,7 @@ public class StudentDetService {
     }
 
     private StudentDet applyUpdate(StudentDet existing, StudentDet record) {
+        Map<String, Object> before = activityLogService.snapshot(existing);
         existing.setStudentName(record.getStudentName());
         existing.setTranName(record.getTranName());
         existing.setAttendInTime(record.getAttendInTime());
@@ -121,7 +124,9 @@ public class StudentDetService {
         existing.setNarration(record.getNarration());
         existing.setRemarks(record.getRemarks());
         existing.setDelFlag(record.getDelFlag() == null ? existing.getDelFlag() : record.getDelFlag());
-        return repository.save(existing);
+        StudentDet saved = repository.save(existing);
+        activityLogService.appendModifyDiff("Student Daily Activity", "student_det", before, saved);
+        return saved;
     }
 
     private Integer lookupStudentNumber(String studentId) {

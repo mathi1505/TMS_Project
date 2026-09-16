@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ import java.util.List;
 public class StudentMasterService {
 
     private final StudentMasterRepository repository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<StudentMaster> getAll() {
@@ -129,6 +131,8 @@ public class StudentMasterService {
 
     private StudentMaster applyUpdate(StudentMaster existing, StudentMaster record) {
 
+        Map<String, Object> before = activityLogService.snapshot(existing);
+
         existing.setStudentName(record.getStudentName());
         if (record.getStudyMode() != null && !record.getStudyMode().isBlank()) {
             validateStudyMode(record.getStudyMode());
@@ -156,6 +160,8 @@ public class StudentMasterService {
             existing.setStdStatus(record.getStdStatus());
         }
         existing.setDelFlag(record.getDelFlag() == null ? existing.getDelFlag() : record.getDelFlag());
-        return repository.save(existing);
+        StudentMaster saved = repository.save(existing);
+        activityLogService.appendModifyDiff("Student Master", "student_master", before, saved);
+        return saved;
     }
 }

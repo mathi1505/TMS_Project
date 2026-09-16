@@ -1,6 +1,8 @@
 package com.example.lissomsoft.tms.controller;
 
+import com.example.lissomsoft.tms.audit.NoActivityAudit;
 import com.example.lissomsoft.tms.entity.CourseMaster;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.CourseMasterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/course-master")
 @RequiredArgsConstructor
+@RequiresScreen("CRSM")
 public class CourseMasterController {
 
     private final CourseMasterService service;
@@ -35,6 +38,7 @@ public class CourseMasterController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @NoActivityAudit
     public CourseMaster update(@PathVariable String id, @RequestBody CourseMaster record) {
         return service.update(id, record);
     }

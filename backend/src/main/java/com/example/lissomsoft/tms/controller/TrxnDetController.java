@@ -1,6 +1,8 @@
 package com.example.lissomsoft.tms.controller;
 
+import com.example.lissomsoft.tms.audit.NoActivityAudit;
 import com.example.lissomsoft.tms.entity.TrxnDet;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.TrxnDetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -14,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/trxn-det")
 @RequiredArgsConstructor
+@RequiresScreen("TRXD")
 public class TrxnDetController {
 
     private final TrxnDetService service;
@@ -34,6 +37,7 @@ public class TrxnDetController {
 
     @PutMapping("/lookup")
     @PreAuthorize("hasRole('ADMIN')")
+    @NoActivityAudit
     public TrxnDet updateByKeyParams(@RequestParam String trxnId,
                                        @RequestParam Integer masterNumber,
                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,
@@ -66,6 +70,7 @@ public class TrxnDetController {
 
     @PutMapping("/{trxnId}/{masterNumber}/{tranDate}/{valueDate}/{referenceNo}")
     @PreAuthorize("hasRole('ADMIN')")
+    @NoActivityAudit
     public TrxnDet update(@PathVariable String trxnId,
                            @PathVariable Integer masterNumber,
                            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,

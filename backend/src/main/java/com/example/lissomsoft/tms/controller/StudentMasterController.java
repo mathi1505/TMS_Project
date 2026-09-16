@@ -1,6 +1,8 @@
 package com.example.lissomsoft.tms.controller;
 
 import com.example.lissomsoft.tms.entity.StudentMaster;
+import com.example.lissomsoft.tms.audit.NoActivityAudit;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.StudentMasterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/student-master")
 @RequiredArgsConstructor
+@RequiresScreen("STDM")
 public class StudentMasterController {
 
     private final StudentMasterService service;
@@ -25,7 +28,12 @@ public class StudentMasterController {
         return service.getById(id);
     }
 
+    // Class-level requires STDM (Student Master, admin/staff), but
+    // student-my-activity-list/-form.component.ts also call this with the
+    // logged-in student's own id/number to show their study mode, so MYAC
+    // is added here to grant that self-lookup.
     @GetMapping("/{id}/{studentNumber}")
+    @RequiresScreen({"STDM", "MYAC"})
     public StudentMaster getByIdAndNumber(@PathVariable String id, @PathVariable Integer studentNumber) {
         return service.getByIdAndNumber(id, studentNumber);
     }
@@ -55,11 +63,13 @@ public class StudentMasterController {
     }
 
     @PutMapping("/{id}")
+    @NoActivityAudit
     public StudentMaster update(@PathVariable String id, @RequestBody StudentMaster record) {
         return service.update(id, record);
     }
 
     @PutMapping("/{id}/{studentNumber}")
+    @NoActivityAudit
     public StudentMaster update(@PathVariable String id, @PathVariable Integer studentNumber,
                                  @RequestBody StudentMaster record) {
         return service.update(id, studentNumber, record);

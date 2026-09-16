@@ -1,6 +1,8 @@
 package com.example.lissomsoft.tms.controller;
 
+import com.example.lissomsoft.tms.audit.NoActivityAudit;
 import com.example.lissomsoft.tms.entity.StudentDet;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.StudentDetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -10,9 +12,18 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Backs two screens off the same table: "Student Daily Activity" (STDD -
+ * admin/staff managing every student's entries) and "My Daily Activity"
+ * (MYAC - a student's own self-entry log). Either grants read/create
+ * access; only STDD may update, since the "My Daily Activity" form never
+ * offers editing (it only ever calls create) - see
+ * student-my-activity-form.component.ts.
+ */
 @RestController
 @RequestMapping("/api/student-det")
 @RequiredArgsConstructor
+@RequiresScreen({"STDD", "MYAC"})
 public class StudentDetController {
 
     private final StudentDetService service;
@@ -66,6 +77,8 @@ public class StudentDetController {
     }
 
     @PutMapping
+    @RequiresScreen("STDD")
+    @NoActivityAudit
     public StudentDet update(@RequestParam String studentId,
                               @RequestParam(required = false) Integer studentNumber,
                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tranDate,

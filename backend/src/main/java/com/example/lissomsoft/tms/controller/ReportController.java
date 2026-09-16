@@ -5,6 +5,7 @@ import com.example.lissomsoft.tms.dto.ReportDailyActivityListRow;
 import com.example.lissomsoft.tms.dto.ReportDailyActivityResponse;
 import com.example.lissomsoft.tms.dto.ReportStudentActivitySummary;
 import com.example.lissomsoft.tms.dto.ReportStudentSummary;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +17,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportController {
 
+    // Each endpoint below is annotated for the specific report screen it
+    // backs (RPTS = Student Information Report, RPTA = Student Activity
+    // Dashboard Report, RPTD = Student Daily Activity Report), matching the
+    // Angular routes/screen codes in app.routes.ts.
+
     private final ReportService service;
 
     @GetMapping("/students")
+    @RequiresScreen("RPTS")
     public List<ReportStudentSummary> searchStudents(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String studentType,
@@ -26,7 +33,13 @@ public class ReportController {
         return service.searchStudents(name, studentType, studentNumber);
     }
 
+    // RPTD backs the admin/staff "Student Daily Activity Report" screen; MYAC
+    // is added because student-my-activity-list/-form.component.ts also call
+    // this same endpoint (with the logged-in student's own id/number) to show
+    // the top-line header and activity rows on their own "My Daily Activity"
+    // screen — either grants entry, matching the StudentDetController pattern.
     @GetMapping("/students/{studentId}/{studentNumber}/daily-activity")
+    @RequiresScreen({"RPTD", "MYAC"})
     public ReportDailyActivityResponse dailyActivity(
             @PathVariable String studentId,
             @PathVariable Integer studentNumber,
@@ -36,6 +49,7 @@ public class ReportController {
     }
 
     @GetMapping("/students/export")
+    @RequiresScreen("RPTS")
     public ExportFileResponse exportStudents(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String studentType,
@@ -45,6 +59,7 @@ public class ReportController {
     }
 
     @GetMapping("/students/{studentId}/{studentNumber}/daily-activity/export")
+    @RequiresScreen("RPTD")
     public ExportFileResponse exportDailyActivity(
             @PathVariable String studentId,
             @PathVariable Integer studentNumber,
@@ -56,6 +71,7 @@ public class ReportController {
 
 
     @GetMapping("/activities")
+    @RequiresScreen("RPTA")
     public List<ReportStudentActivitySummary> searchActivities(
             @RequestParam(required = false) String studentType,
             @RequestParam(required = false) String tranParticular,
@@ -66,6 +82,7 @@ public class ReportController {
 
 
     @GetMapping("/activities/daily-activity")
+    @RequiresScreen("RPTD")
     public List<ReportDailyActivityListRow> dailyActivityList(
             @RequestParam(required = false) String studentType,
             @RequestParam(required = false) String tranParticular,
@@ -75,6 +92,7 @@ public class ReportController {
     }
 
     @GetMapping("/activities/export")
+    @RequiresScreen({"RPTA", "RPTD"})
     public ExportFileResponse exportActivities(
             @RequestParam(required = false) String studentType,
             @RequestParam(required = false) String tranParticular,

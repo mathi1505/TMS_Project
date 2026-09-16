@@ -38,14 +38,18 @@
       <!-- Student Type -->
       <div class="field" [class.field-error-state]="showError('studentType')">
         <label for="f-type">Student Type <span class="req">*</span></label>
-        <select id="f-type" formControlName="studentType" class="status-select"
-          (blur)="onFieldBlur('studentType')">
-          @for (opt of studentTypeOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
+        @if (mode === 'new') {
+          <select id="f-type" formControlName="studentType" class="status-select"
+            (blur)="onFieldBlur('studentType')">
+            @for (opt of studentTypeOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @if (err('studentType', 'required')) {
+            <small class="field-error">⚠ Type is required.</small>
           }
-        </select>
-        @if (err('studentType', 'required')) {
-          <small class="field-error">⚠ Type is required.</small>
+        } @else {
+          <input type="text" [value]="current?.studentId ?? ''" disabled class="mono" />
         }
       </div>
 
@@ -141,10 +145,12 @@
       <div class="field" [class.field-error-state]="showError('nativePlace')">
         <label for="f-native">Native / From Place <span class="req">*</span></label>
         <input id="f-native" type="text" formControlName="nativePlace"
-          maxlength="25" placeholder="e.g. Indore"
+          maxlength="50" placeholder="e.g. Indore"
           (blur)="onFieldBlur('nativePlace')" />
         @if (err('nativePlace', 'required')) {
           <small class="field-error">⚠ Native / From Place is required.</small>
+        } @else if (err('nativePlace', 'maxlength')) {
+          <small class="field-error">⚠ Native / From Place must be 50 characters or fewer.</small>
         }
       </div>
 
@@ -220,7 +226,7 @@
         <div class="field" [class.field-error-state]="showError('emailId') || hasDuplicateError('emailId')">
           <label for="f-email">Email ID <span class="req">*</span></label>
           <input id="f-email" type="text" formControlName="emailId"
-            maxlength="30" placeholder="example@domain.com"
+            maxlength="50" placeholder="example@domain.com"
             (blur)="onFieldBlur('emailId')" />
           @if (err('emailId', 'required')) {
             <small class="field-error">⚠ Email ID is required.</small>
@@ -229,7 +235,7 @@
           } @else if (err('emailId', 'emailDotCom')) {
             <small class="field-error">⚠ Email must contain ".com".</small>
           } @else if (err('emailId', 'maxlength')) {
-            <small class="field-error">⚠ Maximum 30 characters.</small>
+            <small class="field-error">⚠ Maximum 50 characters.</small>
           } @else if (hasDuplicateError('emailId')) {
             <small class="field-error">⚠ {{ duplicateErrors['emailId'] }}</small>
           }
@@ -257,10 +263,12 @@
         <div class="field" [class.field-error-state]="showError('qualification')">
           <label for="f-qual">Qualification <span class="req">*</span></label>
           <input id="f-qual" type="text" formControlName="qualification"
-            maxlength="20" placeholder="e.g. B.Tech, MCA"
+            maxlength="30" placeholder="e.g. B.Tech, MCA"
             (blur)="onFieldBlur('qualification')" />
           @if (err('qualification', 'required')) {
             <small class="field-error">⚠ Qualification is required.</small>
+          } @else if (err('qualification', 'maxlength')) {
+            <small class="field-error">⚠ Maximum 30 characters.</small>
           }
         </div>
 

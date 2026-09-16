@@ -45,6 +45,9 @@ export class UserMasterFormComponent implements OnInit, OnDestroy {
   showStudentSuggestions = false;
   studentNameSearching = false;
 
+  private allUsers: AppUser[] = [];
+  userNameDuplicate = false;
+
   form: FormGroup = this.fb.group({
     role:       ['ADMIN' as Role, [Validators.required]],
     userName:   ['', [Validators.required, Validators.maxLength(25)]],
@@ -102,6 +105,8 @@ export class UserMasterFormComponent implements OnInit, OnDestroy {
     const userId = params.get('userId');
     const userNo = params.get('userNo') ? Number(params.get('userNo')) : null;
 
+    this.svc.getAll().subscribe(all => { this.allUsers = all; });
+
     
     this.configSub = this.configDetSvc.activeData$.subscribe(rows => {
       this.roleOptions = roleOptionsFromConfig(rows);
@@ -134,6 +139,15 @@ export class UserMasterFormComponent implements OnInit, OnDestroy {
     });
 
     this.form.get('role')?.valueChanges.subscribe((role: Role) => this.applyRoleValidators(role));
+
+    this.form.get('userName')?.valueChanges.subscribe(() => {
+      if (this.userNameDuplicate) {
+        this.userNameDuplicate = false;
+        const errs = { ...(this.form.get('userName')?.errors ?? {}) };
+        delete errs['duplicate'];
+        this.form.get('userName')?.setErrors(Object.keys(errs).length ? errs : null);
+      }
+    });
 
     if (this.mode === 'new') {
       this.form.enable();
@@ -240,8 +254,30 @@ export class UserMasterFormComponent implements OnInit, OnDestroy {
   }
 
   onStudentNameBlur(): void {
-    
+
     setTimeout(() => this.showStudentSuggestions = false, 150);
+  }
+
+  onUserNameBlur(): void {
+    this.form.get('userName')?.markAsTouched();
+    this.checkUserNameDuplicate();
+  }
+
+  private checkUserNameDuplicate(): void {
+    const raw = this.form.get('userName')?.value as string | null;
+    this.userNameDuplicate = false;
+    if (!raw || !raw.trim()) return;
+
+    const v = raw.trim().toLowerCase();
+    const found = this.allUsers.find(u => {
+      if (this.current && u.userId === this.current.userId && u.userNo === this.current.userNo) return false;
+      return (u.userName ?? '').trim().toLowerCase() === v;
+    });
+
+    if (found) {
+      this.userNameDuplicate = true;
+      this.form.get('userName')?.setErrors({ ...(this.form.get('userName')?.errors ?? {}), duplicate: true });
+    }
   }
 
   selectStudentSuggestion(s: StudentMaster): void {
@@ -270,8 +306,11 @@ export class UserMasterFormComponent implements OnInit, OnDestroy {
   onSave(): void {
     if (this.mode === 'view') { this.goBack(); return; }
     this.form.markAllAsTouched();
+    this.checkUserNameDuplicate();
     if (this.form.invalid) {
-      this.banner = { kind: 'error', text: 'Please fill all the required fields.' };
+      this.banner = { kind: 'error', text: this.userNameDuplicate
+        ? 'User Name already exists.'
+        : 'Please fill all the required fields.' };
       return;
     }
     if (this.isStudentRole && !this.form.get('studentNo')?.value) {

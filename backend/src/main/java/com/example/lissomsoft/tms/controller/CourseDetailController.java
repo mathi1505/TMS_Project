@@ -1,6 +1,8 @@
 package com.example.lissomsoft.tms.controller;
 
+import com.example.lissomsoft.tms.audit.NoActivityAudit;
 import com.example.lissomsoft.tms.entity.CourseDetail;
+import com.example.lissomsoft.tms.security.RequiresScreen;
 import com.example.lissomsoft.tms.service.CourseDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,11 +14,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/course-detail")
 @RequiredArgsConstructor
+@RequiresScreen("CRSD")
 public class CourseDetailController {
 
     private final CourseDetailService service;
 
+
     @GetMapping
+    @RequiresScreen({"CRSD", "MYAC"})
     public List<CourseDetail> getAll() {
         return service.getAll();
     }
@@ -45,6 +50,7 @@ public class CourseDetailController {
 
     @PutMapping("/{courseId}/{courseDetId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @NoActivityAudit
     public CourseDetail update(@PathVariable String courseId, @PathVariable Integer courseDetId,
                                 @RequestBody CourseDetail record) {
         return service.update(courseId, courseDetId, record);

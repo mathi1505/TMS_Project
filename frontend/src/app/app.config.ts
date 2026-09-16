@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { apiErrorInterceptor } from './interceptors/api-error.interceptor';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { encryptionInterceptor } from './interceptors/encryption.interceptor';
+import { sessionInterceptor } from './interceptors/session.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,6 +15,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideToastr({ timeOut: 3000, positionClass: 'toast-top-right', preventDuplicates: true }),
-    provideHttpClient(withInterceptors([authInterceptor, apiErrorInterceptor, encryptionInterceptor]))
+    provideHttpClient(withInterceptors([authInterceptor, sessionInterceptor, apiErrorInterceptor, encryptionInterceptor]))
   ]
 };

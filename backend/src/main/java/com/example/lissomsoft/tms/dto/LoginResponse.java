@@ -6,6 +6,7 @@ public record LoginResponse(
     String userId,
     Integer userNo,
     String userName,
-    String role
+    String role,
+    String sessionId
 ) {
 }

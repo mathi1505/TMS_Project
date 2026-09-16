@@ -187,13 +187,13 @@ export class StudentMasterFormComponent implements OnInit, OnDestroy {
     studyMode:          ['On',  [Validators.required]],
     assignedStaff:      ['',    [Validators.required]],
     batch:              [null,  [Validators.required, Validators.min(1)]],
-    nativePlace:        ['',    [Validators.required, Validators.maxLength(25)]],
+    nativePlace:        ['',    [Validators.required, Validators.maxLength(50)]],
     joiningDate:        ['',    [Validators.required, notFutureDate()]],
     mobileNo:           ['',    [Validators.required, digitsOnlyStr(10)]],
     emergencyContactNo: ['',    [Validators.required, digitsOnlyStr(10)]],
     relationship:       ['',    [Validators.maxLength(30)]],
-    emailId:            ['',    [Validators.required, Validators.maxLength(30), emailValidator()]],
-    qualification:      ['',    [Validators.required, Validators.maxLength(20)]],
+    emailId:            ['',    [Validators.required, Validators.maxLength(50), emailValidator()]],
+    qualification:      ['',    [Validators.required, Validators.maxLength(30)]],
     collegeName:        ['',    [Validators.required, Validators.maxLength(50)]],
     passoutYear:        [null,  [Validators.required, fourDigitYear()]],
     experience:         ['',    [Validators.required, Validators.maxLength(30)]],
@@ -630,9 +630,16 @@ export class StudentMasterFormComponent implements OnInit, OnDestroy {
     if (this.mode === 'view') { this.goBack(); return; }
 
 
-    const mandatoryToCheck = this.form.get('paidStatus')?.value === 'N'
+    let mandatoryToCheck = this.form.get('paidStatus')?.value === 'N'
       ? this.MANDATORY_FIELDS.filter(f => f !== 'totalAgreedFee')
       : this.MANDATORY_FIELDS;
+
+    // studentType only exists to derive the ID prefix when creating a new
+    // student — it isn't part of the saved record, so it's always empty
+    // (and disabled) once we're editing an existing one. Don't block save on it.
+    if (this.mode === 'modify') {
+      mandatoryToCheck = mandatoryToCheck.filter(f => f !== 'studentType');
+    }
 
     mandatoryToCheck.forEach(f => {
       this.blurredFields.add(f);

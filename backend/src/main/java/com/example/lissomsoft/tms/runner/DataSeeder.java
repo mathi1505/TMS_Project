@@ -11,6 +11,9 @@ import com.example.lissomsoft.tms.entity.TrxnDet;
 import com.example.lissomsoft.tms.repository.TrxnDetRepository;
 import com.example.lissomsoft.tms.entity.TrxnMaster;
 import com.example.lissomsoft.tms.repository.TrxnMasterRepository;
+import com.example.lissomsoft.tms.dto.ScreenCatalog;
+import com.example.lissomsoft.tms.entity.RoleScreenAccess;
+import com.example.lissomsoft.tms.repository.RoleScreenAccessRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -31,12 +34,14 @@ public class DataSeeder implements CommandLineRunner {
     private final TrxnMasterRepository trxnMasterRepository;
     private final TrxnDetRepository trxnDetRepository;
     private final UserRepository userRepository;
+    private final RoleScreenAccessRepository roleScreenAccessRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         seedUsers();
         seedConfigDet();
+        seedRoleScreenAccess();
         seedCourseMaster();
         seedCourseDetail();
         seedTrxnMaster();
@@ -86,6 +91,26 @@ public class DataSeeder implements CommandLineRunner {
             c.setEntryDate(d);
             configDetRepository.save(c);
         }
+    }
+
+    /**
+     * Seeds the starting Role Access table so STAFF and STUDENT keep exactly
+     * the screen access they already had before this feature existed.
+     * ADMIN is not stored — it always has full access (see RoleAccessService).
+     * Runs once; after that the Role Access admin screen owns this data.
+     */
+    private void seedRoleScreenAccess() {
+        if (roleScreenAccessRepository.count() > 0) return;
+        LocalDate d = LocalDate.of(2026, 1, 1);
+
+        java.util.List<RoleScreenAccess> rows = new java.util.ArrayList<>();
+        for (String code : ScreenCatalog.DEFAULT_STAFF_CODES) {
+            rows.add(new RoleScreenAccess("STAFF", code, "system", d));
+        }
+        for (String code : ScreenCatalog.DEFAULT_STUDENT_CODES) {
+            rows.add(new RoleScreenAccess("STUDENT", code, "system", d));
+        }
+        roleScreenAccessRepository.saveAll(rows);
     }
 
     private void seedCourseMaster() {

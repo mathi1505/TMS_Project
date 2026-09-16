@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ import java.util.List;
 public class TrxnMasterService {
 
     private final TrxnMasterRepository repository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<TrxnMaster> getAll() {
@@ -50,10 +52,13 @@ public class TrxnMasterService {
 
     public TrxnMaster update(String trxnId, Integer trxnNumber, TrxnMaster record) {
         TrxnMaster existing = getByKey(trxnId, trxnNumber);
+        Map<String, Object> before = activityLogService.snapshot(existing);
         existing.setTrxnName(record.getTrxnName());
         existing.setTrxnDescription(record.getTrxnDescription());
         existing.setDelFlag(record.getDelFlag() == null ? existing.getDelFlag() : record.getDelFlag());
-        return repository.save(existing);
+        TrxnMaster saved = repository.save(existing);
+        activityLogService.appendModifyDiff("Transaction Master", "Trxn_master", before, saved);
+        return saved;
     }
 
     private String pad(int n) {

@@ -28,6 +28,7 @@ public class UserService {
     private final StudentMasterRepository studentMasterRepository;
     private final ConfigDetRepository configDetRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     private static final Pattern NON_ALNUM = Pattern.compile("[^A-Z0-9]");
 
@@ -134,6 +135,7 @@ public class UserService {
 
     public UserResponse update(String userId, Integer userNo, UserUpsertRequest req) {
         User existing = findEntity(userId, userNo);
+        Map<String, Object> before = activityLogService.snapshot(existing);
 
         if (!existing.getUserName().equalsIgnoreCase(req.userName().trim())) {
             repository.findByUserNameIgnoreCase(req.userName().trim()).ifPresent(other -> {
@@ -154,6 +156,10 @@ public class UserService {
             existing.setDelFlg(req.delFlg());
         }
 
-        return UserResponse.from(repository.save(existing));
+        User saved = repository.save(existing);
+        // passwordHash is always excluded from the diff by ActivityDiffUtil,
+        // so a password change never writes even a hashed value to activity_log.
+        activityLogService.appendModifyDiff("User Maintenance", "app_user", before, saved);
+        return UserResponse.from(saved);
     }
 }

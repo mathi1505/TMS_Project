@@ -13,7 +13,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      @if (auth.isStudent()) {
+      @if (roleAccess.canAccess('MYAC')) {
         <div class="nav-group">
           <div class="nav-group-title">My Activity</div>
           <a routerLink="/my-activity" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'My Daily Activity' : ''">
@@ -24,37 +24,49 @@
           </a>
         </div>
       }
-      @if (!auth.isStudent()) {
+
+      @if (auth.isAdmin() || roleAccess.canAccess('CRSM') || roleAccess.canAccess('STDM') || roleAccess.canAccess('TRXM') || roleAccess.canAccess('CFGM')) {
       <div class="nav-group">
         <div class="nav-group-title">Masters</div>
+        @if (auth.isAdmin() || roleAccess.canAccess('CRSM')) {
         <a routerLink="/course-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Course Master' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
           </svg>
           <span class="nav-label">Course Master</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('STDM')) {
         <a routerLink="/student-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Student Master' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
           </svg>
           <span class="nav-label">Student Master</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('TRXM')) {
         <a routerLink="/transaction-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Transaction Master' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h4v2H4v-2zm6 0h4v2h-4v-2zm-6 4h4v1H4v-1zm6 0h4v1h-4v-1z" clip-rule="evenodd"/>
           </svg>
           <span class="nav-label">Transaction Master</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('CFGM')) {
         <a routerLink="/config-master" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Configuration Master' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
           </svg>
           <span class="nav-label">Configuration Master</span>
         </a>
+        }
       </div>
+      }
 
+      @if (auth.isAdmin() || roleAccess.canAccess('CRSD') || roleAccess.canAccess('STDD') || roleAccess.canAccess('TRXD')) {
       <div class="nav-group">
         <div class="nav-group-title">Detailed</div>
+        @if (auth.isAdmin() || roleAccess.canAccess('CRSD')) {
         <a routerLink="/course-detail" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Course Detail' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
@@ -62,12 +74,16 @@
           </svg>
           <span class="nav-label">Course Detail</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('STDD')) {
         <a routerLink="/student-detail" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Student Daily Activity' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
           </svg>
           <span class="nav-label">Student Daily Activity</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('TRXD')) {
         <a routerLink="/transaction-detail" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Daily Transaction Entry' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M4 3a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V8.414a1 1 0 00-.293-.707l-4.414-4.414A1 1 0 008.586 3H4z"/>
@@ -76,24 +92,32 @@
           </svg>
           <span class="nav-label">Daily Transaction Entry</span>
         </a>
+        }
       </div>
+      }
+
+      @if (auth.isAdmin() || roleAccess.canAccess('DASH') || roleAccess.canAccess('RPTS')) {
       <div class="nav-group">
         <div class="nav-group-title">Reports</div>
+        @if (auth.isAdmin() || roleAccess.canAccess('DASH')) {
         <a routerLink="/dashboard" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Reports Dash Board' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M3 13a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zM8 9a1 1 0 011-1h2a1 1 0 011 1v8a1 1 0 01-1 1H9a1 1 0 01-1-1V9zM14 5a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V5z"/>
           </svg>
           <span class="nav-label">Reports Dash Board</span>
         </a>
+        }
+        @if (auth.isAdmin() || roleAccess.canAccess('RPTS')) {
         <a routerLink="/report" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Student Information Report' : ''">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h5.586A2 2 0 0113 2.586L15.414 5A2 2 0 0116 6.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 7a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd"/>
           </svg>
           <span class="nav-label">Student Information</span>
         </a>
+        }
       </div>
-
       }
+
       @if (auth.isAdmin()) {
         <div class="nav-group">
           <div class="nav-group-title">Administration</div>
@@ -103,6 +127,12 @@
               <path fill-rule="evenodd" d="M18 8a1 1 0 00-1-1h-1V6a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0V9h1a1 1 0 001-1z" clip-rule="evenodd"/>
             </svg>
             <span class="nav-label">User Maintenance</span>
+          </a>
+          <a routerLink="/role-access" [routerLinkActiveOptions]="{exact:false}" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed ? 'Role Access' : ''">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/>
+            </svg>
+            <span class="nav-label">Role Access</span>
           </a>
         </div>
       }

@@ -56,4 +56,17 @@
       {{ submitting ? 'Signing in…' : 'Sign In' }}
     </button>
   </form>
+
+  @if (showChangePasswordPrompt) {
+    <div class="prompt-overlay">
+      <div class="prompt-card">
+        <h2>Change your password?</h2>
+        <p>This looks like your first time signing in. Would you like to set a new password now?</p>
+        <div class="prompt-actions">
+          <button type="button" class="prompt-btn prompt-btn-secondary" (click)="respondToChangePasswordPrompt(false)">No, later</button>
+          <button type="button" class="prompt-btn prompt-btn-primary" (click)="respondToChangePasswordPrompt(true)">Yes, change it</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

@@ -53,6 +53,7 @@ export interface LoginResponse {
   userNo: number;
   userName: string;
   role: Role;
+  sessionId: string;
 }
 
 export interface CurrentUser {
@@ -60,4 +61,9 @@ export interface CurrentUser {
   userNo: number;
   userName: string;
   role: Role;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }

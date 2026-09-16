@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ import java.util.List;
 public class CourseMasterService {
 
     private final CourseMasterRepository repository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<CourseMaster> getAll() {
@@ -47,12 +49,15 @@ public class CourseMasterService {
 
     public CourseMaster update(String id, CourseMaster record) {
         CourseMaster existing = getById(id);
+        Map<String, Object> before = activityLogService.snapshot(existing);
         existing.setTechnology(record.getTechnology());
         existing.setTopic(record.getTopic());
         existing.setDurationWeeks(record.getDurationWeeks());
         existing.setHours(record.getHours());
         existing.setDelFlag(record.getDelFlag() == null ? existing.getDelFlag() : record.getDelFlag());
-        return repository.save(existing);
+        CourseMaster saved = repository.save(existing);
+        activityLogService.appendModifyDiff("Course Master", "course_master", before, saved);
+        return saved;
     }
 
     private String normalize(String id) {

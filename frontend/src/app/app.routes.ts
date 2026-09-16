@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
-import { studentGuard, notStudentGuard } from './guards/student.guard';
+import { changePasswordGuard } from './guards/change-password.guard';
+import { screenGuard } from './guards/screen.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -14,8 +15,16 @@ export const routes: Routes = [
   },
 
   {
+    path: 'change-password',
+    canActivate: [changePasswordGuard],
+    loadComponent: () =>
+      import('./components/change-password/change-password.component').then(m => m.ChangePasswordComponent),
+    title: 'Set Your Password'
+  },
+
+  {
     path: 'config-master',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('CFGM')],
     loadComponent: () =>
       import('./components/config-master-list/config-master-list.component').then(m => m.ConfigMasterListComponent),
     title: 'Configuration Master'
@@ -23,15 +32,23 @@ export const routes: Routes = [
 
   {
     path: 'config-master-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('CFGM'), adminGuard],
     loadComponent: () =>
       import('./components/config-master-form/config-master-form.component').then(m => m.ConfigMasterFormComponent),
     title: 'Configuration Master – Form'
   },
 
   {
-    path: 'user-master',
+    path: 'role-access',
     canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./components/role-access/role-access.component').then(m => m.RoleAccessComponent),
+    title: 'Role Access'
+  },
+
+  {
+    path: 'user-master',
+    canActivate: [authGuard, screenGuard('USRM'), adminGuard],
     loadComponent: () =>
       import('./components/user-master-list/user-master-list.component').then(m => m.UserMasterListComponent),
     title: 'User Maintenance'
@@ -39,7 +56,7 @@ export const routes: Routes = [
 
   {
     path: 'user-master-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('USRM'), adminGuard],
     loadComponent: () =>
       import('./components/user-master-form/user-master-form.component').then(m => m.UserMasterFormComponent),
     title: 'User Maintenance – Form'
@@ -47,7 +64,7 @@ export const routes: Routes = [
 
   {
     path: 'course-master',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('CRSM')],
     loadComponent: () =>
       import('./components/course-master-list/course-master-list.component').then(m => m.CourseMasterListComponent),
     title: 'Course Master'
@@ -55,7 +72,7 @@ export const routes: Routes = [
 
   {
     path: 'course-master-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('CRSM'), adminGuard],
     loadComponent: () =>
       import('./components/course-master-form/course-master-form.component').then(m => m.CourseMasterFormComponent),
     title: 'Course Master – Form'
@@ -63,7 +80,7 @@ export const routes: Routes = [
 
   {
     path: 'course-detail',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('CRSD')],
     loadComponent: () =>
       import('./components/course-detail-list/course-detail-list.component').then(m => m.CourseDetailListComponent),
     title: 'Course Detail – Frontend (Angular 19)'
@@ -71,7 +88,7 @@ export const routes: Routes = [
 
   {
     path: 'course-detail-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('CRSD'), adminGuard],
     loadComponent: () =>
       import('./components/course-detail-form/course-detail-form.component').then(m => m.CourseDetailFormComponent),
     title: 'Course Detail – Form'
@@ -79,7 +96,7 @@ export const routes: Routes = [
 
   {
     path: 'student-master',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('STDM')],
     loadComponent: () =>
       import('./components/student-master-list/student-master-list.component').then(m => m.StudentMasterListComponent),
     title: 'Student Master'
@@ -87,7 +104,7 @@ export const routes: Routes = [
 
   {
     path: 'student-master-form',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('STDM')],
     loadComponent: () =>
       import('./components/student-master-form/student-master-form.component').then(m => m.StudentMasterFormComponent),
     title: 'Student Master – Form'
@@ -95,7 +112,7 @@ export const routes: Routes = [
 
   {
     path: 'transaction-master',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('TRXM')],
     loadComponent: () =>
       import('./components/transaction-master-list/transaction-master-list.component').then(m => m.TransactionMasterListComponent),
     title: 'Transaction Master'
@@ -103,7 +120,7 @@ export const routes: Routes = [
 
   {
     path: 'transaction-master-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('TRXM'), adminGuard],
     loadComponent: () =>
       import('./components/transaction-master-form/transaction-master-form.component').then(m => m.TransactionMasterFormComponent),
     title: 'Transaction Master – Form'
@@ -111,7 +128,7 @@ export const routes: Routes = [
 
   {
     path: 'student-detail',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('STDD')],
     loadComponent: () =>
       import('./components/student-detail-list/student-detail-list.component').then(m => m.StudentDetailListComponent),
     title: 'Student Daily Activity'
@@ -119,7 +136,7 @@ export const routes: Routes = [
 
   {
     path: 'student-detail-form',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('STDD')],
     loadComponent: () =>
       import('./components/student-detail-form/student-detail-form.component').then(m => m.StudentDetailFormComponent),
     title: 'Student Daily Activity – Form'
@@ -127,7 +144,7 @@ export const routes: Routes = [
 
   {
     path: 'transaction-detail',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('TRXD')],
     loadComponent: () =>
       import('./components/transaction-detail-list/transaction-detail-list.component').then(m => m.TransactionDetailListComponent),
     title: 'Daily Transaction Entry'
@@ -135,7 +152,7 @@ export const routes: Routes = [
 
   {
     path: 'transaction-detail-form',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard, screenGuard('TRXD'), adminGuard],
     loadComponent: () =>
       import('./components/transaction-detail-form/transaction-detail-form.component').then(m => m.TransactionDetailFormComponent),
     title: 'Daily Transaction Entry – Form'
@@ -143,7 +160,7 @@ export const routes: Routes = [
 
   {
     path: 'my-activity',
-    canActivate: [authGuard, studentGuard],
+    canActivate: [authGuard, screenGuard('MYAC')],
     loadComponent: () =>
       import('./components/student-my-activity-list/student-my-activity-list.component').then(m => m.StudentMyActivityListComponent),
     title: 'My Daily Activity'
@@ -151,7 +168,7 @@ export const routes: Routes = [
 
   {
     path: 'my-activity-form',
-    canActivate: [authGuard, studentGuard],
+    canActivate: [authGuard, screenGuard('MYAC')],
     loadComponent: () =>
       import('./components/student-my-activity-form/student-my-activity-form.component').then(m => m.StudentMyActivityFormComponent),
     title: 'My Daily Activity – New Entry'
@@ -159,7 +176,7 @@ export const routes: Routes = [
 
   {
     path: 'dashboard',
-    canActivate: [authGuard, notStudentGuard],
+    canActivate: [authGuard, screenGuard('DASH')],
     loadComponent: () =>
       import('./components/reports-dashboard/reports-dashboard.component').then(m => m.ReportsDashboardComponent),
     title: 'Reports Dash Board'
@@ -167,7 +184,7 @@ export const routes: Routes = [
 
   {
     path: 'report',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('RPTS')],
     loadComponent: () =>
       import('./components/report-student-list/report-student-list.component').then(m => m.ReportStudentListComponent),
     title: 'Student Information Report'
@@ -175,7 +192,7 @@ export const routes: Routes = [
 
   {
     path: 'report-activity',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('RPTA')],
     loadComponent: () =>
       import('./components/report-student-activity/report-student-activity.component').then(m => m.ReportStudentActivityComponent),
     title: 'Student Activity Dashboard Report'
@@ -183,7 +200,7 @@ export const routes: Routes = [
 
   {
     path: 'report-daily-activity',
-    canActivate: [authGuard],
+    canActivate: [authGuard, screenGuard('RPTD')],
     loadComponent: () =>
       import('./components/report-daily-activity/report-daily-activity.component').then(m => m.ReportDailyActivityComponent),
     title: 'Student Daily Activity Report'

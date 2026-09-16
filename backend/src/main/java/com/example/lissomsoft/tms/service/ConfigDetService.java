@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ import java.util.List;
 public class ConfigDetService {
 
     private final ConfigDetRepository repository;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<ConfigDet> getAll() {
@@ -70,6 +72,7 @@ public class ConfigDetService {
             ConfigDet record) {
 
         ConfigDet existing = getByKey(configMaster, configId);
+        Map<String, Object> before = activityLogService.snapshot(existing);
 
         existing.setConfigName(record.getConfigName());
 
@@ -85,7 +88,9 @@ public class ConfigDetService {
                         : record.getDelFlag()
         );
 
-        return repository.save(existing);
+        ConfigDet saved = repository.save(existing);
+        activityLogService.appendModifyDiff("Configuration Master", "Config_det", before, saved);
+        return saved;
     }
 
     private String pad(int n) {

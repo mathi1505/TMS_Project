@@ -23,6 +23,8 @@ export class LoginComponent {
   submitting = false;
   errorMessage = '';
   showPassword = false;
+  showChangePasswordPrompt = false;
+  private pendingLandingRoute = '/';
 
   form: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
@@ -58,8 +60,17 @@ export class LoginComponent {
     this.auth.login(request).subscribe({
       next: () => {
         this.submitting = false;
-       
-        this.router.navigateByUrl(this.auth.isStudent() ? '/my-activity' : '/');
+        this.pendingLandingRoute = this.auth.isStudent() ? '/my-activity' : '/';
+
+        const user = this.auth.currentUser();
+        if (user && !this.auth.hasSeenChangePasswordPrompt(user.userId, user.userNo)) {
+          // First login ever (on this browser) for this account: ask once
+          // whether they'd like to change their password. Later, regular
+          // logins skip straight past this.
+          this.showChangePasswordPrompt = true;
+          return;
+        }
+        this.router.navigateByUrl(this.pendingLandingRoute);
       },
       error: (err: Error) => {
         this.submitting = false;
@@ -67,5 +78,14 @@ export class LoginComponent {
         this.errorMessage = err.message || 'Login failed. Please try again.';
       }
     });
+  }
+
+  respondToChangePasswordPrompt(wantsChange: boolean): void {
+    const user = this.auth.currentUser();
+    if (user) {
+      this.auth.markChangePasswordPromptSeen(user.userId, user.userNo);
+    }
+    this.showChangePasswordPrompt = false;
+    this.router.navigateByUrl(wantsChange ? '/change-password' : this.pendingLandingRoute);
   }
 }

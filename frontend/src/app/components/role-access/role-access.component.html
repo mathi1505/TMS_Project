@@ -1,0 +1,86 @@
+<section class="screen grid-screen">
+
+  <div class="page-toolbar">
+    <div class="page-title-group">
+      <h2>Role Access</h2>
+      <!-- <p class="page-subtitle">Control which screens each role can open. Add new roles on the Configuration Master screen (category ROLE) — they'll show up here automatically.</p> -->
+    </div>
+  </div>
+
+  @if (banner) {
+    <div class="banner"
+      [class.banner-error]="banner.kind==='error'"
+      [class.banner-info]="banner.kind==='info'"
+      [class.banner-success]="banner.kind==='success'"
+    >{{ banner.text }}</div>
+  }
+
+  <div class="card role-picker-card">
+    <div class="field key-field">
+      <label for="role-select">Role</label>
+      <select id="role-select" class="status-select" [(ngModel)]="selectedRole" (ngModelChange)="onRoleChange()">
+        @for (r of roles; track r.value) {
+          <option [value]="r.value">{{ r.label }} ({{ r.value }})</option>
+        }
+      </select>
+    </div>
+
+    @if (isAdminRole) {
+      <div class="admin-note">
+        <span class="admin-note-icon">🛡</span>
+        Administrator always has full access to every screen. This can't be changed here.
+      </div>
+    }
+
+    @if (!isAdminRole) {
+      <div class="picker-actions">
+        <span class="selected-count">{{ selectedCount }} / {{ totalCount }} screens selected</span>
+        <div class="picker-buttons">
+          <button type="button" class="btn btn-ghost" (click)="selectAll()">Select All</button>
+          <button type="button" class="btn btn-ghost" (click)="clearAll()">Clear All</button>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="card loading-card">Loading…</div>
+  } @else {
+    <div class="card screens-card">
+      @for (g of groups; track g.group) {
+        <div class="screen-group">
+          <div class="screen-group-title">{{ g.group }}</div>
+          <div class="screen-grid">
+            @for (s of g.screens; track s.code) {
+              <label class="screen-tile" [class.disabled]="isAdminRole" [class.checked]="isChecked(s.code)">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked(s.code)"
+                  [disabled]="isAdminRole"
+                  (change)="toggle(s.code)"
+                />
+                <span class="screen-name">{{ s.name }}</span>
+                <span class="screen-code mono">{{ s.code }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (!isAdminRole) {
+      <div class="save-bar">
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="saving || !isDirty"
+          (click)="save()"
+        >{{ saving ? 'Saving…' : 'Save Access' }}</button>
+        @if (!isDirty && !saving) {
+          <span class="save-hint">No unsaved changes.</span>
+        }
+      </div>
+    }
+  }
+
+</section>
